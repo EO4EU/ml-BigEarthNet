@@ -3,7 +3,7 @@ FROM ubuntu
 ENV FLASK_APP=SSL-Image2Feature
 COPY requirements.txt /app/requirements.txt
 COPY --from=Include /app /app
-WORKDIR /app
+WORKDIR /app 
 RUN apt-get update && apt-get install python3 python3-pip ffmpeg libsm6 libxext6 software-properties-common wget -y
 RUN mkdir -p /root/.config/pip
 COPY pip.conf /root/.config/pip/pip.conf
