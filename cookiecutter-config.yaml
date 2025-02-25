@@ -1,17 +1,37 @@
 default_context:
-  chart_name: "bigearthnet"
-  chart_namespace: "test-bigearthnet"
-  chart_version: "0.1.2"
+  chart_name: "bigearthnet-image-to-feature-raw-s2"
+  chart_namespace: "bigearthnet"
+  chart_version: "0.1.0"
   need_dep_chart: "no"
-  include_service: "no"
+  include_service: "yes"
+  service_name: "ssl-image-to-feature-raw-s2"
+  service_image_repo: "registry.apps.eo4eu.eu/eo4eu/eo4eu-inference-server/bigearthnet/eo4eu-wrapper-bigearthnet-image-to-feature-raw-s2"
+  service_image_tag: "latest"
+  service_image_pull_policy: "Always"
+  service_image_secret: "bigearthnet-registry"
+  service_container_port: "8080"
+  service_request_cpu: "100m"
+  service_request_memory: "4G"
+  service_limit_cpu: "1"
+  service_limit_memory: "16G"
   include_inference_service: "no"
   include_sklearn_inference_service: "no"
-  include_namespace: "yes"
-  include_role: "yes"
-  include_role_binding: "yes"
+  include_namespace: "no"
+  include_role: "no"
+  include_role_binding: "no"
   include_service_account: "no"
   include_virtual_service: "no"
   virtual_service_cluster_domain: "cineca-inference-server"
   include_sklearn_virtual_service: "no"
   include_external_s3_secret: "no"
-  include_external_registry_secret: "no"
+  include_external_registry_secret: "yes"
+  external_registry_secret_name: "bigearthnet-registry"
+  k8s_registry_secret_name: "bigearthnet-registry"
+  external_registry_secret_data:
+    "data": [
+      {
+        secret_key: "dockerconfigjson",
+        vault_secret_key: "registry_pull_secret/eo4eu-inference-server/bigearthnet",
+        vault_secret_property: ".dockerconfigjson"
+      }
+    ]

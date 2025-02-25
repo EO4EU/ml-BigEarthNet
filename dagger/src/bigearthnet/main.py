@@ -29,14 +29,37 @@ class Bigearthnet:
         )
 
     @function
+    async def encode(
+        self,
+        username: Annotated[str, Doc("Registry username")],
+        password: Annotated[dagger.Secret, Doc("Registry password")],
+    ) -> str:
+        token = await password.plaintext()
+        return await (
+            dag.container()
+            .from_("alpine:latest")
+            .with_exec(
+                [
+                    "/bin/sh",
+                    "-c",
+                    f"printf {username}:{token} | base64"
+                ]
+            )
+            .stdout()
+        )
+
+    @function
     async def build(
         self,
+        registry: Annotated[str, Doc("Registry address")],
         bucket: Annotated[str, Doc("S3 Bucket")],
         endpoint: Annotated[str, Doc("S3 Endpoint")],
         access: Annotated[dagger.Secret, Doc("S3 Access Key")],
         secret: Annotated[dagger.Secret, Doc("S3 Secret Key")],
         repo: Annotated[str, Doc("Registry repo")],
         tag: Annotated[str, Doc("Image tag")],
+        username: Annotated[str, Doc("Registry username")],
+        password: Annotated[dagger.Secret, Doc("Registry password")],
         wkd: Annotated[
             dagger.Directory,
             Doc("Location of directory containing Dagger files"),
@@ -45,6 +68,21 @@ class Bigearthnet:
         """Build and publish image from existing Dockerfile"""
         accesskey = await access.plaintext()
         secretkey = await secret.plaintext()
+        blob = await self.encode(username, password)
+        config = (
+            dag.container()
+            .from_("alpine:latest")
+            .with_env_variable("CI_REGISTRY", registry)
+            .with_env_variable("CI_BLOB", blob)
+            .with_exec(
+                [
+                    "/bin/sh",
+                    "-c",
+                    "echo '{\"auths\":{\"'$CI_REGISTRY'\":{\"auth\":\"'$CI_BLOB'\"}}}' | sed 's/ //g'"
+                ],
+                redirect_stdout="/tmp/config.json"
+            )
+        )
         return await (
             dag.container()
             .from_("gcr.io/kaniko-project/executor:debug")
@@ -52,14 +90,15 @@ class Bigearthnet:
                 "registry.local",
                 self.registry(bucket, endpoint, accesskey, secretkey)
             )            
-            .with_mounted_directory("/workspace", wkd)
+            .with_mounted_directory("/kaniko/.docker", wkd)
+            .with_file("/kaniko/.docker/config.json", config.file("/tmp/config.json"))
             .with_exec(
                 [
                     "/kaniko/executor",
                     "--context", 
-                    "dir:///workspace/",
+                    "dir:///kaniko/.docker/",
                     "--dockerfile",
-                    "/workspace/Dockerfile",
+                    "/kaniko/.docker/Dockerfile",
                     "--insecure",
                     "--destination",
                     f"registry.local/{repo}:{tag}"
@@ -164,26 +203,6 @@ class Bigearthnet:
                 ]
             )
             .file(f"/src/sbom-report.cdx.json")
-        )
-
-    @function
-    async def encode(
-        self,
-        username: Annotated[str, Doc("Registry username")],
-        password: Annotated[dagger.Secret, Doc("Registry password")],
-    ) -> str:
-        token = await password.plaintext()
-        return await (
-            dag.container()
-            .from_("alpine:latest")
-            .with_exec(
-                [
-                    "/bin/sh",
-                    "-c",
-                    f"printf {username}:{token} | base64"
-                ]
-            )
-            .stdout()
         )
 
     @function
