@@ -1,0 +1,12 @@
+{
+  "name": "bigearthnet",
+  "engineVersion": "v0.15.2",
+  "dependencies": [
+    {
+      "name": "trivy",
+      "source": "github.com/jpadams/daggerverse/trivy@9890b76992bf840bad7b36625b9e45df31fadde9"
+    }
+  ],
+  "sdk": "python",
+  "source": "dagger"
+}
