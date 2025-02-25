@@ -1,7 +1,7 @@
 default_context:
   chart_name: "bigearthnet-image-to-feature-raw-s2"
   chart_namespace: "bigearthnet"
-  chart_version: "0.1.1"
+  chart_version: "0.1.2"
   need_dep_chart: "no"
   include_service: "yes"
   service_name: "ssl-image-to-feature-raw-s2"
@@ -31,7 +31,7 @@ default_context:
     "data": [
       {
         secret_key: "dockerconfigjson",
-        vault_secret_key: "registry_pull_secret/eo4eu-inference-server/bigearthnet",
+        vault_secret_key: "eo4eu-cicd/registry_pull_secret/eo4eu-inference-server/bigearthnet",
         vault_secret_property: ".dockerconfigjson"
       }
     ]
