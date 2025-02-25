@@ -134,7 +134,7 @@ push_image:
           --repo $REPO \
           --app $APP \
           --srctag $TAG \
-          --dsttag $TAG \
+          --dsttag latest \
           --username $CI_REPO_USERNAME \
           --password env:CI_REPO_PASSWORD \
           --wkd build

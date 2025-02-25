@@ -30,7 +30,6 @@ BANDS_20M = [
 ]
 
 
-
 def read_data_local(parent,name,bNeedToResize):
     bands_data = []
     try:
