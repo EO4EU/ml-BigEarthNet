@@ -1,7 +1,7 @@
 default_context:
   chart_name: "bigearthnet-image-to-feature-raw-s2"
-  chart_namespace: "shared"
-  chart_version: "0.1.6"
+  chart_namespace: "test-bigearthnet"
+  chart_version: "0.1.7"
   need_dep_chart: "no"
   include_service: "yes"
   service_name: "ssl-image-to-feature"
@@ -16,7 +16,7 @@ default_context:
   service_limit_memory: "16G"
   include_inference_service: "no"
   include_sklearn_inference_service: "no"
-  include_namespace: "no"
+  include_namespace: "yes"
   include_role: "no"
   include_role_binding: "no"
   include_service_account: "no"
