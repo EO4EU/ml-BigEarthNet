@@ -139,7 +139,7 @@ def create_app():
                                                             logger_workflow.info("granule path "+str(folderGranule),extra={'status': 'DEBUG'})
                                                             cpIMGData10m=folderGranule/"IMG_DATA"/"R10m"
                                                             for image in cpIMGData10m.iterdir():
-                                                                  pattern=r'.*_(.*)_10m\.tif$'
+                                                                  pattern=r'.*_(.*)_10m\.jp2$'
                                                                   match = re.search(pattern,image.name)
                                                                   logger_workflow.info("image path "+str(image),extra={'status': 'DEBUG'})
                                                                   if match:
@@ -153,7 +153,7 @@ def create_app():
                                                                         logger_workflow.info("not matched",extra={'status': 'DEBUG'})
                                                             cpIMGData20m=folderGranule/"IMG_DATA"/"R20m"
                                                             for image in cpIMGData20m.iterdir():
-                                                                  pattern=r'.*_(.*)_20m\.tif$'
+                                                                  pattern=r'.*_(.*)_20m\.jp2$'
                                                                   match = re.search(pattern,image.name)
                                                                   logger_workflow.info("image path "+str(image),extra={'status': 'DEBUG'})
                                                                   if match:
