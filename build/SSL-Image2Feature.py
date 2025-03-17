@@ -191,7 +191,7 @@ def create_app():
                                                                               logger_workflow.error("band_name "+band_name+" not found. Stopping treating folder "+str(folder),extra={'status': 'INFO'})
                                                                               return
                                                                         band_path = dicPath[band_name]
-                                                                        logger_workflow.info("band_path "+band_path,extra={'status': 'DEBUG'})
+                                                                        logger_workflow.info("band_path "+str(band_path),extra={'status': 'DEBUG'})
                                                                         with band_path.open('rb') as fileBand, rasterio.io.MemoryFile(fileBand) as memfile:
                                                                               with memfile.open(sharing=False) as band_file:
                                                                                     band_data   = band_file.read(1)  # open the tif image as a numpy array
