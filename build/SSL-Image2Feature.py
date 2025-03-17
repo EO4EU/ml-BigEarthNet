@@ -147,7 +147,7 @@ def create_app():
                                                                               logger_workflow.info("matchedBand "+matchedBand,extra={'status': 'DEBUG'})
                                                                               if matchedBand in ['B02','B03','B04','B08']:
                                                                                     logger_workflow.info("matchedBand 10m "+matchedBand,extra={'status': 'DEBUG'})
-                                                                                    path_src=str(image)
+                                                                                    path_src=image
                                                                                     dicPath[matchedBand]=path_src
                                                                         else:
                                                                               logger_workflow.info("not matched",extra={'status': 'DEBUG'})
@@ -162,7 +162,7 @@ def create_app():
                                                                               logger_workflow.info("matchedBand "+matchedBand,extra={'status': 'DEBUG'})
                                                                               if matchedBand in ['B05','B06','B07','B8A','B11','B12']:
                                                                                     logger_workflow.info("matchedBand 20m "+matchedBand,extra={'status': 'DEBUG'})
-                                                                                    path_src=str(image)
+                                                                                    path_src=image
                                                                                     dicPath[matchedBand]=path_src
                                                                         else:
                                                                               logger_workflow.info("not matched",extra={'status': 'DEBUG'})
