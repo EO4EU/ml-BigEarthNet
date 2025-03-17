@@ -1,10 +1,10 @@
 default_context:
   chart_name: "bigearthnet-image-to-feature-raw-s2"
   chart_namespace: "shared"
-  chart_version: "0.1.3"
+  chart_version: "0.1.4"
   need_dep_chart: "no"
   include_service: "yes"
-  service_name: "ssl-image-to-feature-raw-s2"
+  service_name: "ssl-image-to-feature"
   service_image_repo: "registry.apps.eo4eu.eu/eo4eu/eo4eu-inference-server/bigearthnet/eo4eu-wrapper-bigearthnet-image-to-feature-raw-s2"
   service_image_tag: "cbf1f2638d89448488db5b138a7f76caa2ab85a9"
   service_image_pull_policy: "Always"
