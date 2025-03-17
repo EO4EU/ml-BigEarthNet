@@ -192,7 +192,7 @@ def create_app():
 
                                                                   for band_name in BANDS_ALL:
                                                                         if band_name not in dicPath:
-                                                                              logger_workflow.error("band_name "+band_name+" not found. Stopping treating folder "+str(folder),extra={'status': 'INFO'})
+                                                                              logger_workflow.info("band_name "+band_name+" not found. Stopping treating folder "+str(folder),extra={'status': 'INFO'})
                                                                               return
                                                                         band_path = dicPath[band_name]
                                                                         logger_workflow.info("band_path "+str(band_path),extra={'status': 'DEBUG'})
@@ -214,8 +214,10 @@ def create_app():
 
                                                                   bands_data = np.stack(bands_data)
                                                                   shape = bands_data.shape
-                                                                  h=shape[0]
-                                                                  w=shape[1]
+                                                                  h=shape[1]
+                                                                  w=shape[2]
+                                                                  if h<120 or w<120:
+                                                                        logger_workflow.info("Dimension too small, it should be at least 120. h "+str(h)+" w "+str(w)+"Stopping treating folder "+str(folder),extra={'status': 'INFO'})
                                                                   to_infer=[]
                                                                   for i in range(0,h-119,120):
                                                                         for j in range(0,w-119,120):
@@ -299,6 +301,7 @@ def create_app():
                               logger_workflow.info('orig shape '+str(toInfer[count]["data"].shape), extra={'status': 'DEBUG'})
                               logger_workflow.info('iCord '+str(iCord)+' jCord '+str(jCord), extra={'status': 'DEBUG'})
                               data=toInfer[count]["data"][:,iCord:iCord+120,jCord:jCord+120]
+                              data=BigEarthNetLoader.normalize_bands(data)
                               logger_workflow.info('data shape '+str(data.shape), extra={'status': 'DEBUG'})
                               #BigEarthNetLoader.normalize_bands(data)
                               data=np.expand_dims(data.astype(np.float32),axis=0)
