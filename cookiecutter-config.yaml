@@ -1,7 +1,7 @@
 default_context:
   chart_name: "bigearthnet-image-to-feature-raw-s2"
   chart_namespace: "test-bigearthnet"
-  chart_version: "0.1.11"
+  chart_version: "0.1.12"
   need_dep_chart: "no"
   include_service: "yes"
   service_name: "ssl-image-to-feature"

@@ -127,89 +127,96 @@ def create_app():
                               
                               with cpOutput.joinpath('log.txt').open('w') as fileOutput:
                                     meta=None
-                                    for folder in cp.iterdir():
-                                          pattern=r'.*MSIL2A.*\.SAFE$'
-                                          match = re.search(pattern,folder.name)
-                                          if match:
-                                                logger_workflow.info('matched folder '+str(folder), extra={'status': 'DEBUG'})
-                                                with tempfile.TemporaryDirectory() as tempdirBen:
-                                                      cpGranule=folder/"GRANULE"
-                                                      dicPath={}
-                                                      for folderGranule in cpGranule.iterdir():
-                                                            logger_workflow.info("granule path "+str(folderGranule),extra={'status': 'DEBUG'})
-                                                            cpIMGData10m=folderGranule/"IMG_DATA"/"R10m"
-                                                            for image in cpIMGData10m.iterdir():
-                                                                  pattern=r'.*_(.*)_10m\.jp2$'
-                                                                  match = re.search(pattern,image.name)
-                                                                  logger_workflow.info("image path "+str(image),extra={'status': 'DEBUG'})
-                                                                  if match:
-                                                                        matchedBand=match.group(1)
-                                                                        logger_workflow.info("matchedBand "+matchedBand,extra={'status': 'DEBUG'})
-                                                                        if matchedBand in ['B02','B03','B04','B08']:
-                                                                              logger_workflow.info("matchedBand 10m "+matchedBand,extra={'status': 'DEBUG'})
-                                                                              path_src=str(image)
-                                                                              dicPath[matchedBand]=path_src
-                                                                  else:
-                                                                        logger_workflow.info("not matched",extra={'status': 'DEBUG'})
-                                                            cpIMGData20m=folderGranule/"IMG_DATA"/"R20m"
-                                                            for image in cpIMGData20m.iterdir():
-                                                                  pattern=r'.*_(.*)_20m\.jp2$'
-                                                                  match = re.search(pattern,image.name)
-                                                                  logger_workflow.info("image path "+str(image),extra={'status': 'DEBUG'})
-                                                                  if match:
-                                                                        logger_workflow.info("matched",extra={'status': 'DEBUG'})
-                                                                        matchedBand=match.group(1)
-                                                                        logger_workflow.info("matchedBand "+matchedBand,extra={'status': 'DEBUG'})
-                                                                        if matchedBand in ['B05','B06','B07','B8A','B11','B12']:
-                                                                              logger_workflow.info("matchedBand 20m "+matchedBand,extra={'status': 'DEBUG'})
-                                                                              path_src=str(image)
-                                                                              dicPath[matchedBand]=path_src
-                                                                  else:
-                                                                        logger_workflow.info("not matched",extra={'status': 'DEBUG'})
-                                                            BANDS_10M = [
-                                                                        "B04",
-                                                                        "B03",
-                                                                        "B02",
-                                                                        "B08",
-                                                                        ]
+                                    def treatFolder(folder):
+                                                pattern=r'.*MSIL2A.*\.SAFE$'
+                                                match = re.search(pattern,folder.name)
+                                                if match:
+                                                      logger_workflow.info('matched folder '+str(folder), extra={'status': 'DEBUG'})
+                                                      with tempfile.TemporaryDirectory() as tempdirBen:
+                                                            cpGranule=folder/"GRANULE"
+                                                            dicPath={}
+                                                            for folderGranule in cpGranule.iterdir():
+                                                                  logger_workflow.info("granule path "+str(folderGranule),extra={'status': 'DEBUG'})
+                                                                  cpIMGData10m=folderGranule/"IMG_DATA"/"R10m"
+                                                                  for image in cpIMGData10m.iterdir():
+                                                                        pattern=r'.*_(.*)_10m\.jp2$'
+                                                                        match = re.search(pattern,image.name)
+                                                                        logger_workflow.info("image path "+str(image),extra={'status': 'DEBUG'})
+                                                                        if match:
+                                                                              matchedBand=match.group(1)
+                                                                              logger_workflow.info("matchedBand "+matchedBand,extra={'status': 'DEBUG'})
+                                                                              if matchedBand in ['B02','B03','B04','B08']:
+                                                                                    logger_workflow.info("matchedBand 10m "+matchedBand,extra={'status': 'DEBUG'})
+                                                                                    path_src=str(image)
+                                                                                    dicPath[matchedBand]=path_src
+                                                                        else:
+                                                                              logger_workflow.info("not matched",extra={'status': 'DEBUG'})
+                                                                  cpIMGData20m=folderGranule/"IMG_DATA"/"R20m"
+                                                                  for image in cpIMGData20m.iterdir():
+                                                                        pattern=r'.*_(.*)_20m\.jp2$'
+                                                                        match = re.search(pattern,image.name)
+                                                                        logger_workflow.info("image path "+str(image),extra={'status': 'DEBUG'})
+                                                                        if match:
+                                                                              logger_workflow.info("matched",extra={'status': 'DEBUG'})
+                                                                              matchedBand=match.group(1)
+                                                                              logger_workflow.info("matchedBand "+matchedBand,extra={'status': 'DEBUG'})
+                                                                              if matchedBand in ['B05','B06','B07','B8A','B11','B12']:
+                                                                                    logger_workflow.info("matchedBand 20m "+matchedBand,extra={'status': 'DEBUG'})
+                                                                                    path_src=str(image)
+                                                                                    dicPath[matchedBand]=path_src
+                                                                        else:
+                                                                              logger_workflow.info("not matched",extra={'status': 'DEBUG'})
+                                                                  BANDS_10M = [
+                                                                              "B04",
+                                                                              "B03",
+                                                                              "B02",
+                                                                              "B08",
+                                                                              ]
 
 
-                                                            BANDS_20M = [
-                                                            "B05",
-                                                            "B06",
-                                                            "B07",
-                                                            "B8A",
-                                                            "B11",
-                                                            "B12",
-                                                            ]
-                                                            
-                                                            BANDS_ALL=BANDS_10M+BANDS_20M
-                                                            bands_data = []
+                                                                  BANDS_20M = [
+                                                                  "B05",
+                                                                  "B06",
+                                                                  "B07",
+                                                                  "B8A",
+                                                                  "B11",
+                                                                  "B12",
+                                                                  ]
+                                                                  
+                                                                  BANDS_ALL=BANDS_10M+BANDS_20M
+                                                                  bands_data = []
 
-                                                            for band_name in BANDS_ALL:
-                                                                  band_path = dicPath[band_name]
-                                                                  with rasterio.open(band_path,driver="GTiff",sharing=False) as band_file:
-                                                                        band_data   = band_file.read(1)  # open the tif image as a numpy array
-                                                                        # Resize depending on the resolution
-                                                                        if band_name in BANDS_20M:
-                                                                              h=band_data.shape[0]
-                                                                              w=band_data.shape[1]
-                                                                              # Carry out a bicubic interpolation (TUB does exactly this)
-                                                                              band_data = cv2.resize(band_data, dsize=(2*h, 2*w), interpolation=cv2.INTER_CUBIC)
-                                                                              # We have already ignored the 60M ones, and we keep the 10M ones intact
-                                                                        #logging.info("appending")
-                                                                        bands_data.append(band_data)
-                                                                        logger_workflow.info("band_name "+band_name,extra={'status': 'DEBUG'})
-                                                                        logger_workflow.info("band_data shape "+str(band_data.shape),extra={'status': 'DEBUG'})
-                                                                  band_file.close()
+                                                                  for band_name in BANDS_ALL:
+                                                                        if band_name not in dicPath:
+                                                                              logger_workflow.error("band_name "+band_name+" not found. Stopping treating folder "+str(folder),extra={'status': 'INFO'})
+                                                                              return
+                                                                        band_path = dicPath[band_name]
+                                                                        logger_workflow.info("band_path "+band_path,extra={'status': 'DEBUG'})
+                                                                        with rasterio.open(band_path,driver="GTiff",sharing=False) as band_file:
+                                                                              band_data   = band_file.read(1)  # open the tif image as a numpy array
+                                                                              # Resize depending on the resolution
+                                                                              if band_name in BANDS_20M:
+                                                                                    h=band_data.shape[0]
+                                                                                    w=band_data.shape[1]
+                                                                                    # Carry out a bicubic interpolation (TUB does exactly this)
+                                                                                    band_data = cv2.resize(band_data, dsize=(2*h, 2*w), interpolation=cv2.INTER_CUBIC)
+                                                                                    # We have already ignored the 60M ones, and we keep the 10M ones intact
+                                                                              #logging.info("appending")
+                                                                              bands_data.append(band_data)
+                                                                              logger_workflow.info("band_name "+band_name,extra={'status': 'DEBUG'})
+                                                                              logger_workflow.info("band_data shape "+str(band_data.shape),extra={'status': 'DEBUG'})
+                                                                        band_file.close()
 
-                                                            bands_data = np.stack(bands_data)
+                                                                  bands_data = np.stack(bands_data)
                                                             #bands_data = BigEarthNetLoader.normalize_bands(bands_data)
                                                             # data=np.expand_dims(bands_data.astype(np.float32),axis=0)
                                                             # result=doInference(data)
                                                             # outputPath=cpOutput.joinpath(folderOutput.name)
                                                             # with outputPath.open('w') as outputFile:
                                                             #       json.dump(result, outputFile) 
+                                    for folder in cp.iterdir():
+                                          treatFolder(folder)
+                                          
                                                 
                                                 
                         except Exception as e:
