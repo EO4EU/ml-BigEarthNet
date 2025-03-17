@@ -35,6 +35,10 @@ from KafkaHandler import KafkaHandler,DefaultContextFilter
 
 import logging
 
+import asyncio
+
+import time
+
 def create_app():
 
       app = Flask(__name__)
@@ -209,6 +213,41 @@ def create_app():
                                                                         band_file.close()
 
                                                                   bands_data = np.stack(bands_data)
+                                                                  shape = bands_data.shape
+                                                                  h=shape[0]
+                                                                  w=shape[1]
+                                                                  to_infer=[]
+                                                                  for i in range(0,h-119,120):
+                                                                        for j in range(0,w-119,120):
+                                                                              dic={}
+                                                                              dic['i']=i
+                                                                              dic['j']=j
+                                                                              dic['data']=bands_data
+                                                                              to_infer.append(dic)
+                                                                        if w%120!=0:
+                                                                              dic={}
+                                                                              dic['i']=i
+                                                                              dic['j']=w-120
+                                                                              dic['data']=bands_data
+                                                                              to_infer.append(dic)
+                                                                  if h%120!=0:
+                                                                        for j in range(0,w-119,120):
+                                                                              dic={}
+                                                                              dic['i']=h-120
+                                                                              dic['j']=j
+                                                                              dic['data']=bands_data
+                                                                              to_infer.append(dic)
+                                                                        if w%120!=0:
+                                                                              dic={}
+                                                                              dic['i']=h-120
+                                                                              dic['j']=w-120
+                                                                              dic['data']=bands_data
+                                                                              to_infer.append(dic)
+                                                            asyncio.run(doInference(to_infer,logger_workflow))
+                                                            for elem in to_infer:
+                                                                  elem['data']=None
+                                                            with cpOutput.open('w') as outputFile:
+                                                                  json.dump(to_infer, outputFile)
                                                             #bands_data = BigEarthNetLoader.normalize_bands(bands_data)
                                                             # data=np.expand_dims(bands_data.astype(np.float32),axis=0)
                                                             # result=doInference(data)
@@ -236,6 +275,91 @@ def create_app():
                   "msg": "There was a problem ignoring"
                   })
             return response
+      
+      async def doInference(toInfer,logger_workflow):
+
+            triton_client = httpclient.InferenceServerClient(url="default-inference.shared.svc.cineca-inference-server.local", verbose=False,conn_timeout=10000000000,conn_limit=None,ssl=False)
+            nb_Created=0
+            nb_InferenceDone=0
+            nb_Postprocess=0
+            nb_done_instance=0
+            list_postprocess=set()
+            list_task=set()
+            last_throw=0
+            lookup={}
+
+            async def consume(task):
+                  try:
+                        if task[0]==1:
+                              count=task[1]
+                              inputs=[]
+                              outputs=[]
+                              iCord=toInfer[count]["i"]
+                              jCord=toInfer[count]["j"]
+                              data=(toInfer[count]["data"][:,iCord:iCord+120,jCord:jCord+120])
+                              data.BigEarthNetLoader.normalize_bands(data)
+                              data=np.expand_dims(data.astype(np.float32),axis=0)
+                              inputs.append(httpclient.InferInput('input',data.shape, "FP32"))
+                              inputs[0].set_data_from_numpy(data, binary_data=True)
+                              del data
+                              outputs.append(httpclient.InferRequestedOutput('output', binary_data=True))
+                              results = await triton_client.infer('bigearth-net-ssl',inputs,outputs=outputs)
+                              return (task,results)
+                                    #toInfer[count]["result"]=results.as_numpy('probability')[0][0]
+                  except Exception as e:
+                        logger_workflow.error('Got exception in inference '+str(e)+'\n'+traceback.format_exc(), extra={'status': 'WARNING'})
+                        nonlocal last_throw
+                        last_throw=time.time()
+                        return await consume(task)
+                  
+            async def postprocess(task,results):
+                  if task[0]==1:
+                        result=results.as_numpy('output')[0]
+                        toInfer[task[1]]["result"]=result
+
+            def postprocessTask(task):
+                  list_task.discard(task)
+                  new_task=asyncio.create_task(postprocess(*task.result()))
+                  list_postprocess.add(new_task)
+                  def postprocessTaskDone(task2):
+                        nonlocal nb_Postprocess
+                        nb_Postprocess+=1
+                        nonlocal nb_done_instance
+                        nb_done_instance+=task.result()[0][0]
+                        list_postprocess.discard(task2)
+                  new_task.add_done_callback(postprocessTaskDone)
+                  nonlocal nb_InferenceDone
+                  nb_InferenceDone+=1
+
+            def producer():
+                  total=len(toInfer)
+                  count=0
+                  while total-count>=1000:
+                        yield (1000,count)
+                        count=count+1000
+                  while total-count>=1:
+                        yield (1,count)
+                        count=count+1
+
+            last_shown=time.time()
+            start=time.time()-60
+            for item in producer():
+                  while time.time()-last_throw<30 or nb_Created-nb_InferenceDone>5 or nb_Postprocess-nb_InferenceDone>5:
+                        await asyncio.sleep(0)
+                  task=asyncio.create_task(consume(item))
+                  list_task.add(task)
+                  task.add_done_callback(postprocessTask)
+                  nb_Created+=1
+                  if time.time()-last_shown>60:
+                        last_shown=time.time()
+                        logger_workflow.info('done instance '+str(nb_done_instance)+'Inference done value '+str(nb_InferenceDone)+' postprocess done '+str(nb_Postprocess)+ ' created '+str(nb_Created), extra={'status': 'DEBUG'})
+            while nb_InferenceDone-nb_Created>0 or nb_Postprocess-nb_InferenceDone>0:
+                  await asyncio.sleep(0)
+            await asyncio.gather(*list_task,*list_postprocess)
+            logger_workflow.info('Inference done', extra={'status': 'DEBUG'})
+            await triton_client.close()
+      return app
+
                         
 
 # # This function is used to do the inference on the data.
