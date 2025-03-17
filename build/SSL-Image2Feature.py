@@ -5,7 +5,7 @@ import sys
 from cloudpathlib import CloudPath
 from cloudpathlib import S3Client
 import BigEarthNetLoader
-import tritonclient.http as httpclient
+import tritonclient.http.aio as httpclient
 import numpy as np
 from kafka import KafkaProducer
 import os
