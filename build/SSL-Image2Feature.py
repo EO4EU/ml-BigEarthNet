@@ -21,8 +21,6 @@ import subprocess
 
 import tempfile
 
-from osgeo import gdal
-
 from pathlib import Path
 
 import threading
