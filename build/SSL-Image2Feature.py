@@ -192,19 +192,20 @@ def create_app():
                                                                               return
                                                                         band_path = dicPath[band_name]
                                                                         logger_workflow.info("band_path "+band_path,extra={'status': 'DEBUG'})
-                                                                        with rasterio.open(band_path,driver="GTiff",sharing=False) as band_file:
-                                                                              band_data   = band_file.read(1)  # open the tif image as a numpy array
-                                                                              # Resize depending on the resolution
-                                                                              if band_name in BANDS_20M:
-                                                                                    h=band_data.shape[0]
-                                                                                    w=band_data.shape[1]
-                                                                                    # Carry out a bicubic interpolation (TUB does exactly this)
-                                                                                    band_data = cv2.resize(band_data, dsize=(2*h, 2*w), interpolation=cv2.INTER_CUBIC)
-                                                                                    # We have already ignored the 60M ones, and we keep the 10M ones intact
-                                                                              #logging.info("appending")
-                                                                              bands_data.append(band_data)
-                                                                              logger_workflow.info("band_name "+band_name,extra={'status': 'DEBUG'})
-                                                                              logger_workflow.info("band_data shape "+str(band_data.shape),extra={'status': 'DEBUG'})
+                                                                        with band_path.open('rb') as fileBand, rasterio.io.MemoryFile(fileBand) as memfile:
+                                                                              with memfile.open(sharing=False) as band_file:
+                                                                                    band_data   = band_file.read(1)  # open the tif image as a numpy array
+                                                                                    # Resize depending on the resolution
+                                                                                    if band_name in BANDS_20M:
+                                                                                          h=band_data.shape[0]
+                                                                                          w=band_data.shape[1]
+                                                                                          # Carry out a bicubic interpolation (TUB does exactly this)
+                                                                                          band_data = cv2.resize(band_data, dsize=(2*h, 2*w), interpolation=cv2.INTER_CUBIC)
+                                                                                          # We have already ignored the 60M ones, and we keep the 10M ones intact
+                                                                                    #logging.info("appending")
+                                                                                    bands_data.append(band_data)
+                                                                                    logger_workflow.info("band_name "+band_name,extra={'status': 'DEBUG'})
+                                                                                    logger_workflow.info("band_data shape "+str(band_data.shape),extra={'status': 'DEBUG'})
                                                                         band_file.close()
 
                                                                   bands_data = np.stack(bands_data)
