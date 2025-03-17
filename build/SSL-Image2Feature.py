@@ -88,7 +88,7 @@ def create_app():
                   config.load_incluster_config()
                   api_instance = client.CoreV1Api()
                   configmap_name = str(name)
-                  configmap_namespace = 'shared'
+                  configmap_namespace = 'test-bigearthnet'
                   api_response = api_instance.read_namespaced_config_map(configmap_name, configmap_namespace)
                   json_data_request = json.loads(request.data)
                   json_data_configmap =json.loads(str(api_response.data['jsonSuperviserRequest']))      
