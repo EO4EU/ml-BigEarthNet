@@ -297,14 +297,15 @@ def create_app():
                               iCord=toInfer[count]["i"]
                               jCord=toInfer[count]["j"]
                               logger_workflow.info('orig shape '+str(toInfer[count]["data"].shape), extra={'status': 'DEBUG'})
-                              data=(toInfer[count]["data"][:,iCord:iCord+120,jCord:jCord+120])
+                              logger_workflow.info('iCord '+str(iCord)+' jCord '+str(jCord), extra={'status': 'DEBUG'})
+                              data=toInfer[count]["data"][:,iCord:iCord+120,jCord:jCord+120]
                               logger_workflow.info('data shape '+str(data.shape), extra={'status': 'DEBUG'})
                               #BigEarthNetLoader.normalize_bands(data)
                               data=np.expand_dims(data.astype(np.float32),axis=0)
-                              inputs.append(httpclient.InferInput('input',data.shape, "FP32"))
+                              inputs.append(httpclient.InferInput('input_sentinel2_10_bands_120',data.shape, "FP32"))
                               inputs[0].set_data_from_numpy(data, binary_data=True)
                               del data
-                              outputs.append(httpclient.InferRequestedOutput('output', binary_data=True))
+                              outputs.append(httpclient.InferRequestedOutput('representation_512', binary_data=True))
                               results = await triton_client.infer('Bigearth-net-ssl',inputs,outputs=outputs)
                               return (task,results)
                                     #toInfer[count]["result"]=results.as_numpy('probability')[0][0]
@@ -316,7 +317,7 @@ def create_app():
                   
             async def postprocess(task,results):
                   if task[0]==1:
-                        result=results.as_numpy('output')[0]
+                        result=results.as_numpy('representation_512')[0]
                         toInfer[task[1]]["result"]=result
 
             def postprocessTask(task):
