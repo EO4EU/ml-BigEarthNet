@@ -325,8 +325,6 @@ def create_app():
 
             def postprocessTask(task):
                   list_task.discard(task)
-                  logger_workflow.info('type task '+str(type(task)), extra={'status': 'DEBUG'})
-                  logger_workflow.info('type task.result() '+str(type(task.result())), extra={'status': 'DEBUG'})
                   new_task=asyncio.create_task(postprocess(*task.result()))
                   list_postprocess.add(new_task)
                   def postprocessTaskDone(task2):
@@ -342,9 +340,6 @@ def create_app():
             def producer():
                   total=len(toInfer)
                   count=0
-                  while total-count>=1000:
-                        yield (1000,count)
-                        count=count+1000
                   while total-count>=1:
                         yield (1,count)
                         count=count+1
