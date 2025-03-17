@@ -298,7 +298,7 @@ def create_app():
                               jCord=toInfer[count]["j"]
                               data=(toInfer[count]["data"][:,iCord:iCord+120,jCord:jCord+120])
                               logger_workflow.info('data shape '+str(data.shape), extra={'status': 'DEBUG'})
-                              BigEarthNetLoader.normalize_bands(data)
+                              #BigEarthNetLoader.normalize_bands(data)
                               data=np.expand_dims(data.astype(np.float32),axis=0)
                               inputs.append(httpclient.InferInput('input',data.shape, "FP32"))
                               inputs[0].set_data_from_numpy(data, binary_data=True)
