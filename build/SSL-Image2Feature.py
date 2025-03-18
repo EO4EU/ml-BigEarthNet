@@ -321,7 +321,7 @@ def create_app():
             async def postprocess(task,results):
                   if task[0]==1:
                         result=results.as_numpy('representation_512')[0]
-                        toInfer[task[1]]["result"]=result
+                        toInfer[task[1]]["result"]=result.tolist()
 
             def postprocessTask(task):
                   list_task.discard(task)
