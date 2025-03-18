@@ -248,7 +248,7 @@ def create_app():
                                                             asyncio.run(doInference(to_infer,logger_workflow))
                                                             for elem in to_infer:
                                                                   elem['data']=None
-                                                            with cpOutput.open('w') as outputFile:
+                                                            with cpOutput.joinpath(folder.name+'.json').open('w') as outputFile:
                                                                   json.dump(to_infer, outputFile)
                                                             #bands_data = BigEarthNetLoader.normalize_bands(bands_data)
                                                             # data=np.expand_dims(bands_data.astype(np.float32),axis=0)
