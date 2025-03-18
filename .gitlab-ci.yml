@@ -8,10 +8,10 @@
     HELM_NAMESPACE: eo4eu/eo4eu-cicd/cicd-infra
     REGISTRY: registry.apps.eo4eu.eu
     REPO: bigearthnet
-    APP: eo4eu-wrapper-bigearthnet-image-to-feature-raw-s2
+    APP: eo4eu-wrapper-bigearthnet-democlassifier-ssl-feature-to-class
     SERVICE: eo4eu-inference-server
     HELM: helm-repo
-    REPO_BRANCH: SSL-Image-To-Feature-raw-s2
+    REPO_BRANCH: democlassifier-ssl-feature-to-class
     HELM_BRANCH: main
     COOKIECUTTER_BRANCH: inference-server-uc
   before_script:
