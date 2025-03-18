@@ -258,13 +258,23 @@ def create_app():
                                                             #       json.dump(result, outputFile) 
                                     for folder in cp.iterdir():
                                           treatFolder(folder)
-                                          
+                              logger_workflow.info('Connecting to Kafka', extra={'status': 'DEBUG'})
+
+                              response_json ={
+                              "previous_component_end": "True",
+                              "S3_bucket_desc": {
+                                    "folder": "result-image2feature","filename": ""
+                              },
+                              "meta_information": json_data_request.get('meta_information',{})}
+                              Producer.send(kafka_out,key='key',value=response_json)
+                              Producer.flush()                
                                                 
                                                 
                         except Exception as e:
                               logger_workflow.error('Got exception '+str(e)+'\n'+traceback.format_exc()+'\n'+'So we are ignoring the message', extra={'status': 'CRITICAL'})
                               return
                         logger_workflow.info('workflow finished successfully',extra={'status':'SUCCESS'})
+
                   thread = threading.Thread(target=threadentry)
                   thread.start()
                   response = make_response({
