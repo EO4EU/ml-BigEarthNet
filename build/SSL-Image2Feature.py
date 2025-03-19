@@ -216,6 +216,7 @@ def create_app():
                   if task[0]==1:
                         result=results.as_numpy('classes_probability')[0]
                         toInfer[task[1]]["probability"]=result.tolist()
+                        logger_workflow.info('probability '+str(result.tolist()), extra={'status': 'DEBUG'})
 
             def postprocessTask(task):
                   list_task.discard(task)
