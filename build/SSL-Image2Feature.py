@@ -307,7 +307,7 @@ def create_app():
                               inputs.append(httpclient.InferInput('input_sentinel2_10_bands_120',data.shape, "FP32"))
                               inputs[0].set_data_from_numpy(data, binary_data=True)
                               del data
-                              outputs.append(httpclient.InferRequestedOutput('representation_512', binary_data=True))
+                              outputs.append(httpclient.InferRequestedOutput('representation_2048', binary_data=True))
                               results = await triton_client.infer('Bigearth-net-ssl-label',inputs,outputs=outputs)
                               return (task,results)
                                     #toInfer[count]["result"]=results.as_numpy('probability')[0][0]
