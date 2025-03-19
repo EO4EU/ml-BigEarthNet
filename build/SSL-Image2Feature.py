@@ -140,8 +140,19 @@ def create_app():
                                                       data=json.load(file)
                                                 asyncio.run(doInference(data,logger_workflow))
 
+                                                def convert_bytes(obj):
+                                                      """Recursively convert all bytes objects to strings in a nested data structure."""
+                                                      if isinstance(obj, dict):
+                                                            return {key: convert_bytes(value) for key, value in obj.items()}
+                                                      elif isinstance(obj, list):
+                                                            return [convert_bytes(item) for item in obj]
+                                                      elif isinstance(obj, bytes):
+                                                            return obj.decode('utf-8')  # or 'ascii', etc., as appropriate
+                                                      else:
+                                                            return obj
+
                                                 with cpOutput.joinpath(folder.name+'.json').open('w') as outputFile:
-                                                      json.dump(data, outputFile)                                         
+                                                      json.dump(convert_bytes(data), outputFile)                                         
 
                                     for folder in cp.iterdir():
                                           treatFolder(folder)
@@ -216,7 +227,6 @@ def create_app():
                   if task[0]==1:
                         result=results.as_numpy('classes_probability')[0]
                         toInfer[task[1]]["probability"]=result.tolist()
-                        logger_workflow.info('probability '+str(result.tolist()), extra={'status': 'DEBUG'})
 
             def postprocessTask(task):
                   list_task.discard(task)
