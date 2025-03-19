@@ -124,8 +124,8 @@ def create_app():
                               clientS3.set_as_default_client()
                               logger_workflow.info('Client is ready', extra={'status': 'INFO'})
                               cp = CloudPath("s3://"+s3_bucket_output+'/'+s3_path+'/INSITU', client=clientS3)
-                              cpOutput = CloudPath("s3://"+s3_bucket_output+'/result-image2feature/')
-                              logger_workflow.info("path is s3://"+s3_bucket_output+'/result-image2feature/', extra={'status': 'DEBUG'})
+                              cpOutput = CloudPath("s3://"+s3_bucket_output+'/result-feature2class/')
+                              logger_workflow.info("path is s3://"+s3_bucket_output+'/result-feature2class/', extra={'status': 'DEBUG'})
                               def fatalError(message):
                                     logger_workflow.error(message, extra={'status': 'CRITICAL'})
                               
@@ -138,18 +138,21 @@ def create_app():
                                                 logger_workflow.info('matched folder '+str(folder), extra={'status': 'DEBUG'})
                                                 with folder.open('r') as file:
                                                       data=json.load(file)
-                                                logger_workflow.info('data '+str(data), extra={'status': 'DEBUG'})
+                                                doInference(data,logger_workflow)
+
+                                                with cpOutput.joinpath(folder.name+'.json').open('w') as outputFile:
+                                                      json.dump(data, outputFile)                                         
 
                                     for folder in cp.iterdir():
                                           treatFolder(folder)
-                                    for folder in cp.joinpath('result-image2feature').iterdir():
+                                    for folder in cp.joinpath('result-feature2class').iterdir():
                                           treatFolder(folder)
                               logger_workflow.info('Connecting to Kafka', extra={'status': 'DEBUG'})
 
                               response_json ={
                               "previous_component_end": "True",
                               "S3_bucket_desc": {
-                                    "folder": "result-image2feature","filename": ""
+                                    "folder": "result-feature2class","filename": ""
                               },
                               "meta_information": json_data_request.get('meta_information',{})}
                               Producer.send(kafka_out,key='key',value=response_json)
@@ -192,20 +195,14 @@ def create_app():
                               count=task[1]
                               inputs=[]
                               outputs=[]
-                              iCord=toInfer[count]["i"]
-                              jCord=toInfer[count]["j"]
-                              logger_workflow.info('orig shape '+str(toInfer[count]["data"].shape), extra={'status': 'DEBUG'})
-                              logger_workflow.info('iCord '+str(iCord)+' jCord '+str(jCord), extra={'status': 'DEBUG'})
-                              data=toInfer[count]["data"][:,iCord:iCord+120,jCord:jCord+120]
-                              data=BigEarthNetLoader.normalize_bands(data)
+                              data=np.ndarray(toInfer[count]["result"])
                               logger_workflow.info('data shape '+str(data.shape), extra={'status': 'DEBUG'})
                               #BigEarthNetLoader.normalize_bands(data)
-                              data=np.expand_dims(data.astype(np.float32),axis=0)
-                              inputs.append(httpclient.InferInput('input_sentinel2_10_bands_120',data.shape, "FP32"))
+                              inputs.append(httpclient.InferInput('representation_512',data.shape, "FP32"))
                               inputs[0].set_data_from_numpy(data, binary_data=True)
                               del data
-                              outputs.append(httpclient.InferRequestedOutput('representation_512', binary_data=True))
-                              results = await triton_client.infer('Bigearth-net-ssl',inputs,outputs=outputs)
+                              outputs.append(httpclient.InferRequestedOutput('classes_probability', binary_data=True))
+                              results = await triton_client.infer('Bigearth-net-linear',inputs,outputs=outputs)
                               return (task,results)
                                     #toInfer[count]["result"]=results.as_numpy('probability')[0][0]
                   except Exception as e:
@@ -216,8 +213,8 @@ def create_app():
                   
             async def postprocess(task,results):
                   if task[0]==1:
-                        result=results.as_numpy('representation_512')[0]
-                        toInfer[task[1]]["result"]=result.tolist()
+                        result=results.as_numpy('classes_probability')[0]
+                        toInfer[task[1]]["probability"]=result.tolist()
 
             def postprocessTask(task):
                   list_task.discard(task)
