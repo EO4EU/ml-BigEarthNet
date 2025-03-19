@@ -196,6 +196,7 @@ def create_app():
                               inputs=[]
                               outputs=[]
                               data=np.array(toInfer[count]["result"]).astype(np.float32)
+                              data=np.expand_dims(data,axis=0)
                               logger_workflow.info('data shape '+str(data.shape), extra={'status': 'DEBUG'})
                               #BigEarthNetLoader.normalize_bands(data)
                               inputs.append(httpclient.InferInput('representation_512',data.shape, "FP32"))
