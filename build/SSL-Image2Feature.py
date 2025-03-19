@@ -151,7 +151,7 @@ def create_app():
                                                       else:
                                                             return obj
 
-                                                with cpOutput.joinpath(folder.name+'.json').open('w') as outputFile:
+                                                with cpOutput.joinpath(folder.name).open('w') as outputFile:
                                                       json.dump(convert_bytes(data), outputFile)                                         
 
                                     for folder in cp.iterdir():
