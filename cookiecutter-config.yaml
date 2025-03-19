@@ -6,7 +6,7 @@ default_context:
   include_service: "yes"
   service_name: "ssl-image-to-feature"
   service_image_repo: "registry.apps.eo4eu.eu/eo4eu/eo4eu-inference-server/bigearthnet/eo4eu-wrapper-bigearthnet-image-to-feature-raw-s2"
-  service_image_tag: "245a7ed686c3cf7486504d8045b2cec7ed20aba4"
+  service_image_tag: "1b6136dd13b59b72597c3849e2085177a6a320ee"
   service_image_pull_policy: "Always"
   service_image_secret: "bigearthnet-registry"
   service_container_port: "8080"
