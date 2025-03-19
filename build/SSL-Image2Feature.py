@@ -138,7 +138,7 @@ def create_app():
                                                 logger_workflow.info('matched folder '+str(folder), extra={'status': 'DEBUG'})
                                                 with folder.open('r') as file:
                                                       data=json.load(file)
-                                                doInference(data,logger_workflow)
+                                                asyncio.run(doInference(data,logger_workflow))
 
                                                 with cpOutput.joinpath(folder.name+'.json').open('w') as outputFile:
                                                       json.dump(data, outputFile)                                         
