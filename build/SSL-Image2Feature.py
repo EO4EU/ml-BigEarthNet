@@ -198,7 +198,8 @@ def create_app():
                                                                         logger_workflow.info("band_path "+str(band_path),extra={'status': 'DEBUG'})
                                                                         with band_path.open('rb') as fileBand, rasterio.io.MemoryFile(fileBand) as memfile:
                                                                               with memfile.open(sharing=False) as band_file:
-                                                                                    band_data   = band_file.read(1)  # open the tif image as a numpy array
+                                                                                    band_data   = band_file.read(1,masked=True)  # open the tif image as a numpy array
+                                                                                    band_data=band_data.filled(np.nan)
                                                                                     # Resize depending on the resolution
                                                                                     if band_name in BANDS_20M:
                                                                                           h=band_data.shape[0]
@@ -219,32 +220,20 @@ def create_app():
                                                                   if h<120 or w<120:
                                                                         logger_workflow.info("Dimension too small, it should be at least 120. h "+str(h)+" w "+str(w)+"Stopping treating folder "+str(folder),extra={'status': 'INFO'})
                                                                   to_infer=[]
-                                                                  for i in range(0,h-119,120):
-                                                                        for j in range(0,w-119,120):
-                                                                              dic={}
-                                                                              dic['i']=i
-                                                                              dic['j']=j
-                                                                              dic['data']=bands_data
-                                                                              to_infer.append(dic)
-                                                                        if w%120!=0:
-                                                                              dic={}
-                                                                              dic['i']=i
-                                                                              dic['j']=w-120
-                                                                              dic['data']=bands_data
-                                                                              to_infer.append(dic)
-                                                                  if h%120!=0:
-                                                                        for j in range(0,w-119,120):
-                                                                              dic={}
-                                                                              dic['i']=h-120
-                                                                              dic['j']=j
-                                                                              dic['data']=bands_data
-                                                                              to_infer.append(dic)
-                                                                        if w%120!=0:
-                                                                              dic={}
-                                                                              dic['i']=h-120
-                                                                              dic['j']=w-120
-                                                                              dic['data']=bands_data
-                                                                              to_infer.append(dic)
+                                                                  for i in range(0,h,120):
+                                                                        for j in range(0,w,120):
+                                                                              view_data=bands_data[:,i:i+120,j:j+120]
+                                                                              valid=False
+                                                                              if view_data.shape[1]==120 and view_data.shape[2]==120:
+                                                                                    valid=True
+                                                                              if np.isnan(view_data).any():
+                                                                                    valid=False
+                                                                              if valid:
+                                                                                    dic={}
+                                                                                    dic['i']=i
+                                                                                    dic['j']=j
+                                                                                    dic['data']=bands_data
+                                                                                    to_infer.append(dic)
                                                             asyncio.run(doInference(to_infer,logger_workflow))
                                                             for elem in to_infer:
                                                                   elem['data']=None
