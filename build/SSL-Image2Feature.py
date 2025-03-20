@@ -350,7 +350,7 @@ def create_app():
                               logger_workflow.info('toCompress '+str(type(toCompress)), extra={'status': 'DEBUG'})
                               encoder = constriction.stream.queue.RangeEncoder()
                               encoder.encode(toCompress, coder[i])
-                              byte_data,_ = encoder.get_compressed_and_bitrate()
+                              byte_data= encoder.get_compressed()
                               logger_workflow.info('bytes are '+str(byte_data), extra={'status': 'DEBUG'})
                               toInfer[task[1]]["result"+str(i)]=byte_data
                         logger_workflow.info('Compression done in '+str(time.time()-start_compress), extra={'status': 'DEBUG'})
