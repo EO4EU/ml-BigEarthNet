@@ -345,7 +345,7 @@ def create_app():
                         logger_workflow.info('result shape '+str(result.shape), extra={'status': 'DEBUG'})
                         start_compress=time.time()
                         for i in range(8):
-                              toCompress=result[:,:,i].flatten()
+                              toCompress=result[:,:,i].flatten().tolist()
                               encoder = constriction.stream.queue.RangeEncoder()
                               encoder.encode(toCompress, coder[i])
                               byte_data,_ = encoder.get_compressed_and_bitrate()
