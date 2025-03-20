@@ -344,14 +344,17 @@ def create_app():
                         result=results.as_numpy('int64_latent32_15')[0]
                         logger_workflow.info('result shape '+str(result.shape), extra={'status': 'DEBUG'})
                         start_compress=time.time()
-                        for i in range(8):
-                              toCompress=result[:,:,i].flatten().astype(np.int32)
-                              logger_workflow.info('toCompress shape '+str(toCompress.shape), extra={'status': 'DEBUG'})
-                              logger_workflow.info('toCompress '+str(type(toCompress)), extra={'status': 'DEBUG'})
-                              encoder = constriction.stream.queue.RangeEncoder()
-                              encoder.encode(toCompress, coder[i])
-                              byte_data= encoder.get_compressed()
-                              logger_workflow.info('bytes are '+str(byte_data), extra={'status': 'DEBUG'})
+                        def compress_lossless(result):
+                              arrayResult=[]
+                              for i in range(8):
+                                    toCompress=result[:,:,i].flatten().astype(np.int32)
+                                    encoder = constriction.stream.queue.RangeEncoder()
+                                    encoder.encode(toCompress, coder[i])
+                                    byte_data= encoder.get_compressed()
+                                    arrayResult.append(byte_data)
+                              return arrayResult
+                        arrayResult=await asyncio.to_thread(compress_lossless,result)
+                        for i,byte_data in enumerate(arrayResult):
                               toInfer[task[1]]["result"+str(i)]=byte_data
                         logger_workflow.info('Compression done in '+str(time.time()-start_compress), extra={'status': 'DEBUG'})
 
@@ -379,7 +382,7 @@ def create_app():
             last_shown=time.time()
             start=time.time()-60
             for item in producer():
-                  while time.time()-last_throw<30 or nb_Created-nb_InferenceDone>100 or nb_Postprocess-nb_InferenceDone>100:
+                  while time.time()-last_throw<30 or nb_Created-nb_InferenceDone>5 or nb_Postprocess-nb_InferenceDone>5:
                         await asyncio.sleep(0)
                   task=asyncio.create_task(consume(item))
                   list_task.add(task)
