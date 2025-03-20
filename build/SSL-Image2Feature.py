@@ -347,9 +347,10 @@ def create_app():
                   if task[0]==1:
                         result=results.as_numpy('int64_latent32_15')[0]
                         logger_workflow.info('result shape '+str(result.shape), extra={'status': 'DEBUG'})
+                        start_compress=time.time()
                         for i in range(8):
                               toCompress=result[:,:,i].flatten()
-                              compressed=coder[i].compress(toCompress,10000)
+                              compressed=coder[i].compress(toCompress,100)
                               num_padding = (8 - len(compressed) % 8) % 8
                               compressed.extend([0] * num_padding)
                               bit_string = ''.join(str(bit) for bit in compressed)
@@ -357,6 +358,7 @@ def create_app():
                               byte_length = (len(compressed) + 7) // 8  # Calculate the necessary number of bytes
                               byte_data = byte_int.to_bytes(byte_length, byteorder='big')
                               toInfer[task[1]]["result"+str(i)]=byte_data
+                        logger_workflow.info('Compression done in '+str(time.time()-start_compress), extra={'status': 'DEBUG'})
 
             def postprocessTask(task):
                   list_task.discard(task)
