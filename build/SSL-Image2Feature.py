@@ -53,7 +53,7 @@ def create_app():
       app.logger.addHandler(console_handler)
       app.logger.setLevel(logging.DEBUG)
 
-      logger_app = logging.LoggerAdapter(app.logger, {'source': 'ML.uc6.classifier'},merge_extra=True)
+      logger_app = logging.LoggerAdapter(app.logger, {'source': 'ML.ben.compressor'},merge_extra=True)
       logger_app.info("Application Starting up...", extra={'status': 'DEBUG'})
 
 # This is the entry point for the SSL model from Image to Feature service.
@@ -124,8 +124,8 @@ def create_app():
                               clientS3.set_as_default_client()
                               logger_workflow.info('Client is ready', extra={'status': 'INFO'})
                               cp = CloudPath("s3://"+s3_bucket_output+'/'+s3_path+'/INSITU', client=clientS3)
-                              cpOutput = CloudPath("s3://"+s3_bucket_output+'/result-image2feature/')
-                              logger_workflow.info("path is s3://"+s3_bucket_output+'/result-image2feature/', extra={'status': 'DEBUG'})
+                              cpOutput = CloudPath("s3://"+s3_bucket_output+'/result-image2code/')
+                              logger_workflow.info("path is s3://"+s3_bucket_output+'/result-image2code/', extra={'status': 'DEBUG'})
                               def fatalError(message):
                                     logger_workflow.error(message, extra={'status': 'CRITICAL'})
                               
@@ -252,7 +252,7 @@ def create_app():
                               response_json ={
                               "previous_component_end": "True",
                               "S3_bucket_desc": {
-                                    "folder": "result-image2feature","filename": ""
+                                    "folder": "result-image2code","filename": ""
                               },
                               "meta_information": json_data_request.get('meta_information',{})}
                               Producer.send(kafka_out,key='key',value=response_json)
