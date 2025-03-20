@@ -41,6 +41,8 @@ import time
 
 import torch
 
+import pickle
+
 from arithmetic_compressor.models import BaseFrequencyTable
 import AECompressor2
 
@@ -258,8 +260,11 @@ def create_app():
                                                             asyncio.run(doInference(to_infer,logger_workflow,coder))
                                                             for elem in to_infer:
                                                                   elem['data']=None
-                                                            with cpOutput.joinpath(folder.name+'.json').open('w') as outputFile:
-                                                                  json.dump(to_infer, outputFile)
+                                                            resultStore={}
+                                                            resultStore['meta']=metaData
+                                                            resultStore['data']=to_infer
+                                                            with cpOutput.joinpath(folder.name+'.pkl').open('w') as outputFile:
+                                                                  pickle.dump(resultStore, outputFile)
                                                             #bands_data = BigEarthNetLoader.normalize_bands(bands_data)
                                                             # data=np.expand_dims(bands_data.astype(np.float32),axis=0)
                                                             # result=doInference(data)
@@ -342,7 +347,16 @@ def create_app():
                   if task[0]==1:
                         result=results.as_numpy('int64_latent32_15')[0]
                         logger_workflow.info('result shape '+str(result.shape), extra={'status': 'DEBUG'})
-                        toInfer[task[1]]["result"]=result.tolist()
+                        for i in range(8):
+                              toCompress=result[:,:,i].flatten()
+                              compressed=coder[i].compress(toCompress,10000)
+                              num_padding = (8 - len(compressed) % 8) % 8
+                              compressed.extend([0] * num_padding)
+                              bit_string = ''.join(str(bit) for bit in compressed)
+                              byte_int = int(bit_string, 2)
+                              byte_length = (len(compressed) + 7) // 8  # Calculate the necessary number of bytes
+                              byte_data = byte_int.to_bytes(byte_length, byteorder='big')
+                              toInfer[task[1]]["result"+str(i)]=byte_data
 
             def postprocessTask(task):
                   list_task.discard(task)
