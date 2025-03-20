@@ -43,8 +43,7 @@ import torch
 
 import pickle
 
-from arithmetic_compressor.models import BaseFrequencyTable
-import AECompressor2
+import constriction
 
 def create_app():
 
@@ -53,17 +52,13 @@ def create_app():
       with app.app_context():
             countDic=torch.load("/app/resultTrain8.tar",map_location=torch.device('cpu'))
             modelCompressor=[]
-            coder=[]
             for i in range(8):
                   total_count=0
                   for key,value in countDic["count"][i].items():
                         total_count+=value+1
                   for key,value in countDic["count"][i].items():
                         countDic["count"][i][key]=(countDic["count"][i][key]+1)/total_count
-                  model=BaseFrequencyTable(countDic["count"][i])
-                  model.scale_factor=total_count
-                  modelCompressor.append(model)
-                  coder.append(AECompressor2.AECompressor2(modelCompressor[i],adapt=False))
+                  modelCompressor.append(constriction.stream.model.Categorical(countDic["count"][i]))
 
       Producer=KafkaProducer(bootstrap_servers="kafka-external.dev.apps.eo4eu.eu:9092",value_serializer=lambda v: json.dumps(v).encode('utf-8'),key_serializer=str.encode)
       handler = KafkaHandler(defaultproducer=Producer)
@@ -257,7 +252,7 @@ def create_app():
                                                                                     dic['j']=j
                                                                                     dic['data']=bands_data
                                                                                     to_infer.append(dic)
-                                                            asyncio.run(doInference(to_infer,logger_workflow,coder))
+                                                            asyncio.run(doInference(to_infer,logger_workflow,modelCompressor))
                                                             for elem in to_infer:
                                                                   elem['data']=None
                                                             resultStore={}
@@ -350,13 +345,10 @@ def create_app():
                         start_compress=time.time()
                         for i in range(8):
                               toCompress=result[:,:,i].flatten()
-                              compressed=coder[i].compress(toCompress,100)
-                              num_padding = (8 - len(compressed) % 8) % 8
-                              compressed.extend([0] * num_padding)
-                              bit_string = ''.join(str(bit) for bit in compressed)
-                              byte_int = int(bit_string, 2)
-                              byte_length = (len(compressed) + 7) // 8  # Calculate the necessary number of bytes
-                              byte_data = byte_int.to_bytes(byte_length, byteorder='big')
+                              encoder = constriction.stream.queue.RangeEncoder()
+                              encoder.encode(toCompress, coder[i])
+                              byte_data,_ = encoder.get_compressed_and_bitrate()
+                              logger_workflow.info('bytes are '+str(byte_data), extra={'status': 'DEBUG'})
                               toInfer[task[1]]["result"+str(i)]=byte_data
                         logger_workflow.info('Compression done in '+str(time.time()-start_compress), extra={'status': 'DEBUG'})
 

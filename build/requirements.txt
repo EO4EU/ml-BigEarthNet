@@ -11,4 +11,4 @@ aioboto3
 aiofiles
 aiomonitor
 Werkzeug
-arithmetic_compressor
+constriction
