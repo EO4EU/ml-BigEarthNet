@@ -152,6 +152,8 @@ class Bigearthnet:
                     "image",
                     "--skip-files",
                     "/app/Sen2Cor-02.11.00-Linux64.run",
+                    "--skip-files",
+                    "/app/resultTrain8.tar",
                     "--db-repository",
                     "public.ecr.aws/aquasecurity/trivy-db",
                     "--java-db-repository",
