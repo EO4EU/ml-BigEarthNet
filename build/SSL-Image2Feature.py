@@ -57,7 +57,7 @@ def create_app():
                   for key in range(10000):
                         value=countDic["count"][i].get(key,0)+1
                         proba.append(value)
-                  modelCompressor.append(constriction.stream.model.Categorical(np.array(proba,dtype=np.int)))
+                  modelCompressor.append(constriction.stream.model.Categorical(np.array(proba,dtype=np.int32)))
 
       Producer=KafkaProducer(bootstrap_servers="kafka-external.dev.apps.eo4eu.eu:9092",value_serializer=lambda v: json.dumps(v).encode('utf-8'),key_serializer=str.encode)
       handler = KafkaHandler(defaultproducer=Producer)
