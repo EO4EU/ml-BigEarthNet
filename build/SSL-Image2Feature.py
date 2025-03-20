@@ -39,9 +39,29 @@ import asyncio
 
 import time
 
+import torch
+
+from arithmetic_compressor.models import BaseFrequencyTable
+import AECompressor2
+
 def create_app():
 
       app = Flask(__name__)
+
+      with app.app_context():
+            countDic=torch.load("/app/resultTrain8.tar",map_location=torch.device('cpu'))
+            modelCompressor=[]
+            coder=[]
+            for i in range(8):
+                  total_count=0
+                  for key,value in countDic["count"][i].items():
+                        total_count+=value+1
+                  for key,value in countDic["count"][i].items():
+                        countDic["count"][i][key]=(countDic["count"][i][key]+1)/total_count
+                  model=BaseFrequencyTable(countDic["count"][i])
+                  model.scale_factor=total_count
+                  modelCompressor.append(model)
+                  coder.append(AECompressor2.AECompressor2(modelCompressor[i],adapt=False))
 
       Producer=KafkaProducer(bootstrap_servers="kafka-external.dev.apps.eo4eu.eu:9092",value_serializer=lambda v: json.dumps(v).encode('utf-8'),key_serializer=str.encode)
       handler = KafkaHandler(defaultproducer=Producer)
@@ -189,7 +209,7 @@ def create_app():
                                                                   
                                                                   BANDS_ALL=BANDS_10M+BANDS_20M
                                                                   bands_data = []
-
+                                                                  metaData={}
                                                                   for band_name in BANDS_ALL:
                                                                         if band_name not in dicPath:
                                                                               logger_workflow.info("band_name "+band_name+" not found. Stopping treating folder "+str(folder),extra={'status': 'INFO'})
@@ -200,6 +220,7 @@ def create_app():
                                                                               with memfile.open(sharing=False) as band_file:
                                                                                     band_data   = band_file.read(1,masked=True)  # open the tif image as a numpy array
                                                                                     band_data=band_data.filled(np.nan)
+                                                                                    metaData[band_name] = band_file.meta
                                                                                     # Resize depending on the resolution
                                                                                     if band_name in BANDS_20M:
                                                                                           h=band_data.shape[0]
@@ -234,7 +255,7 @@ def create_app():
                                                                                     dic['j']=j
                                                                                     dic['data']=bands_data
                                                                                     to_infer.append(dic)
-                                                            asyncio.run(doInference(to_infer,logger_workflow))
+                                                            asyncio.run(doInference(to_infer,logger_workflow,coder))
                                                             for elem in to_infer:
                                                                   elem['data']=None
                                                             with cpOutput.joinpath(folder.name+'.json').open('w') as outputFile:
@@ -277,7 +298,7 @@ def create_app():
                   })
             return response
       
-      async def doInference(toInfer,logger_workflow):
+      async def doInference(toInfer,logger_workflow,coder):
 
             triton_client = httpclient.InferenceServerClient(url="default-inference.shared.svc.cineca-inference-server.local", verbose=False,conn_timeout=10000000000,conn_limit=None,ssl=False)
             nb_Created=0
@@ -307,8 +328,8 @@ def create_app():
                               inputs.append(httpclient.InferInput('input_sentinel2_10_bands_120',data.shape, "FP32"))
                               inputs[0].set_data_from_numpy(data, binary_data=True)
                               del data
-                              outputs.append(httpclient.InferRequestedOutput('representation_2048', binary_data=True))
-                              results = await triton_client.infer('Bigearth-net-ssl-label',inputs,outputs=outputs)
+                              outputs.append(httpclient.InferRequestedOutput('int64_latent32_15', binary_data=True))
+                              results = await triton_client.infer('Bigearth-net-compression-compress-pytorch',inputs,outputs=outputs)
                               return (task,results)
                                     #toInfer[count]["result"]=results.as_numpy('probability')[0][0]
                   except Exception as e:
@@ -319,7 +340,8 @@ def create_app():
                   
             async def postprocess(task,results):
                   if task[0]==1:
-                        result=results.as_numpy('representation_2048')[0]
+                        result=results.as_numpy('int64_latent32_15')[0]
+                        logger_workflow.info('result shape '+str(result.shape), extra={'status': 'DEBUG'})
                         toInfer[task[1]]["result"]=result.tolist()
 
             def postprocessTask(task):
