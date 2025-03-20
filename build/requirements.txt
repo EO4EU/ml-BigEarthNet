@@ -12,4 +12,3 @@ aiofiles
 aiomonitor
 Werkzeug
 arithmetic_compressor
-torch

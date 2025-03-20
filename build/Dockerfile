@@ -11,7 +11,8 @@ RUN apt-get update && \
 COPY . /app
 WORKDIR /app
 RUN pip install -r requirements.txt
+RUN pip install torch --index-url https://download.pytorch.org/whl/cpu
 COPY --from=Include /app /app 
 EXPOSE 8080
 ENTRYPOINT [ "flask" ]
-CMD [ "run","--port","8080","--host","0.0.0.0" ]
+CMD [ "run","--port","8080","--host","0.0.0.0","--debug" ]
