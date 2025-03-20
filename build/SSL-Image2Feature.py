@@ -53,12 +53,11 @@ def create_app():
             countDic=torch.load("/app/resultTrain8.tar",map_location=torch.device('cpu'))
             modelCompressor=[]
             for i in range(8):
-                  total_count=0
-                  for key,value in countDic["count"][i].items():
-                        total_count+=value+1
-                  for key,value in countDic["count"][i].items():
-                        countDic["count"][i][key]=(countDic["count"][i][key]+1)/total_count
-                  modelCompressor.append(constriction.stream.model.Categorical(countDic["count"][i]))
+                  proba=[]
+                  for key in range(10000):
+                        value=countDic["count"][i].get(key,0)+1
+                        proba.append(value)
+                  modelCompressor.append(constriction.stream.model.Categorical(proba))
 
       Producer=KafkaProducer(bootstrap_servers="kafka-external.dev.apps.eo4eu.eu:9092",value_serializer=lambda v: json.dumps(v).encode('utf-8'),key_serializer=str.encode)
       handler = KafkaHandler(defaultproducer=Producer)
