@@ -59,7 +59,7 @@ def create_app():
                         proba.append(value)
                   proba=np.array(proba,dtype=np.float32)
                   app.logger.info("proba "+str(proba))
-                  modelCompressor.append(constriction.stream.model.Categorical(proba))
+                  modelCompressor.append(constriction.stream.model.Categorical(proba,perfect=False))
 
       Producer=KafkaProducer(bootstrap_servers="kafka-external.dev.apps.eo4eu.eu:9092",value_serializer=lambda v: json.dumps(v).encode('utf-8'),key_serializer=str.encode)
       handler = KafkaHandler(defaultproducer=Producer)
@@ -345,7 +345,9 @@ def create_app():
                         logger_workflow.info('result shape '+str(result.shape), extra={'status': 'DEBUG'})
                         start_compress=time.time()
                         for i in range(8):
-                              toCompress=result[:,:,i].flatten().tolist()
+                              toCompress=result[:,:,i].flatten()
+                              logger_workflow.info('toCompress shape '+str(toCompress.shape), extra={'status': 'DEBUG'})
+                              logger_workflow.info('toCompress '+str(type(toCompress)), extra={'status': 'DEBUG'})
                               encoder = constriction.stream.queue.RangeEncoder()
                               encoder.encode(toCompress, coder[i])
                               byte_data,_ = encoder.get_compressed_and_bitrate()
