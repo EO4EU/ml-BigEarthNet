@@ -234,7 +234,7 @@ def create_app():
                                           data=elem["result"+str(i)]
                                           decoder = constriction.stream.queue.RangeDecoder(data)
                                           decompress_result.append(decoder.decode(modelCompressor[i],60*60).reshape(60,60))
-                                    return np.stack(decompress_result,axis=2)
+                                    return np.stack(decompress_result,axis=2).astype(np.int64)
                               data=await asyncio.to_thread(decompress_lossless,toInfer[count])
                               logger_workflow.info('data shape '+str(data.shape), extra={'status': 'DEBUG'})
                               #BigEarthNetLoader.normalize_bands(data)
