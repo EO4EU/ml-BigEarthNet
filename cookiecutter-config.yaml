@@ -1,7 +1,7 @@
 default_context:
   chart_name: "bigearthnet-compression-code-to-image"
   chart_namespace: "test-bigearthnet"
-  chart_version: "0.1.63"
+  chart_version: "0.1.64"
   need_dep_chart: "no"
   include_service: "yes"
   service_name: "compression-code-to-image"
@@ -11,7 +11,7 @@ default_context:
   service_image_secret: "bigearthnet-registry"
   service_container_port: "8080"
   service_request_cpu: "100m"
-  service_request_memory: "4G"
+  service_request_memory: "10G"
   service_limit_cpu: "1"
   service_limit_memory: "16G"
   include_inference_service: "no"

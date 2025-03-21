@@ -175,6 +175,8 @@ def create_app():
                                                             with outputPath.open('wb') as outputFile:
                                                                   with rasterio.open(outputFile,mode='w',**data["meta"][ALL_BANDS[band_number]]) as file2:
                                                                         file2.write(result[0][band_number], indexes=1)
+                                                                        logger_workflow.info('Writing band '+str(band_number)+" done", extra={'status': 'DEBUG'})
+                                                                  gc.collect()
                                                       del result
                                                       gc.collect()
                                     for folder in cp.iterdir():
