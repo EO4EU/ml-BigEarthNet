@@ -45,6 +45,8 @@ import pickle
 
 import constriction
 
+import gc
+
 def create_app():
 
       app = Flask(__name__)
@@ -173,6 +175,8 @@ def create_app():
                                                             with outputPath.open('wb') as outputFile:
                                                                   with rasterio.open(outputFile,mode='w',**data["meta"][ALL_BANDS[band_number]]) as file2:
                                                                         file2.write(result[0][band_number], indexes=1)
+                                                      del result
+                                                      gc.collect()
                                     for folder in cp.iterdir():
                                           treatFolder(folder)
                                     for folder in cp.joinpath('result-image2code').iterdir():
