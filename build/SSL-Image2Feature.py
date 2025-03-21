@@ -168,8 +168,8 @@ def create_app():
                                                             result[0,:,elem["i"]*120:(elem["i"]+1)*120,elem["j"]*120:(elem["j"]+1)*120]=elem["decompressed"]
                                                       for band_number,band in enumerate(ALL_BANDS):
                                                             app.logger.warning("cpOutput "+str(cpOutput))
-                                                            app.logger.warning("file name "+file.name)
-                                                            outputPath=cpOutput.joinpath(file.name,f"{file.name}_{band}.tif")
+                                                            app.logger.warning("file name "+folder.name)
+                                                            outputPath=cpOutput.joinpath(folder.name,f"{folder.name}_{band}.tif")
                                                             with outputPath.open('wb') as outputFile:
                                                                   with rasterio.open(outputFile,mode='w',**data["meta"][ALL_BANDS[band_number]]) as file2:
                                                                         file2.write(result[0][band_number], indexes=1)
