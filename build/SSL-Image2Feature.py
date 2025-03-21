@@ -177,7 +177,7 @@ def create_app():
                                                             outputPath=cpOutput.joinpath(folder.name,f"{folder.name}_{band}.jp2")
                                                             with outputPath.open('wb') as outputFile:
                                                                   #with rasterio.open(outputFile,mode='w',**data["meta"][ALL_BANDS[band_number]]) as file2:
-                                                                  with rasterio.open(outputFile,mode='w') as file2:
+                                                                  with rasterio.open(outputFile,mode='w',driver="JP2OpenJPEG") as file2:
                                                                         file2.write(result[0][band_number], indexes=1)
                                     for folder in cp.iterdir():
                                           treatFolder(folder)
