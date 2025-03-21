@@ -257,7 +257,6 @@ def create_app():
                         result=results.as_numpy('output_sentinel2_10_bands_120')[0]
                         logger_workflow.info('result shape '+str(result.shape), extra={'status': 'DEBUG'})
                         toInfer[task[1]]["decompressed"]=result*10000
-                        logger_workflow.info('Compression done in '+str(time.time()-start_compress), extra={'status': 'DEBUG'})
 
             def postprocessTask(task):
                   list_task.discard(task)
