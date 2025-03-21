@@ -71,7 +71,7 @@ def create_app():
       app.logger.addHandler(console_handler)
       app.logger.setLevel(logging.DEBUG)
 
-      logger_app = logging.LoggerAdapter(app.logger, {'source': 'ML.ben.compressor'},merge_extra=True)
+      logger_app = logging.LoggerAdapter(app.logger, {'source': 'ML.ben.decompressor'},merge_extra=True)
       logger_app.info("Application Starting up...", extra={'status': 'DEBUG'})
 
 # This is the entry point for the SSL model from Image to Feature service.
