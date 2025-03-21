@@ -156,7 +156,7 @@ def create_app():
                                                       logger_workflow.info('matched folder '+str(folder), extra={'status': 'DEBUG'})
                                                       with folder.open('rb') as file:
                                                             data=pickle.load(file)
-                                                      asyncio.run(doInference(data["data"],logger_workflow))
+                                                      asyncio.run(doInference(data["data"],logger_workflow,modelCompressor))
                                                       ALL_BANDS = BigEarthNetLoader.BANDS_10M + BigEarthNetLoader.BANDS_20M
                                                       imax=0
                                                       jmax=0
