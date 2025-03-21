@@ -167,6 +167,9 @@ def create_app():
                                                             jmax=max(jmax,elem["j"])
                                                       result=np.zeros((1,len(ALL_BANDS),(imax+1),(jmax+1)),dtype=np.float32)
                                                       for elem in data["data"]:
+                                                            logger_workflow.info('elem i '+str(elem["i"])+' j '+str(elem["j"]), extra={'status': 'DEBUG'})
+                                                            logger_workflow.info('elem shape '+str(elem["decompressed"].shape), extra={'status': 'DEBUG'})
+                                                            logger_workflow.info('result shape '+str(result[0,:,elem["i"]:(elem["i"]+120),elem["j"]:(elem["j"]+120)].shape), extra={'status': 'DEBUG'})
                                                             result[0,:,elem["i"]:(elem["i"]+120),elem["j"]:(elem["j"]+120)]=elem["decompressed"]
                                                       for band_number,band in enumerate(ALL_BANDS):
                                                             app.logger.warning("cpOutput "+str(cpOutput))
