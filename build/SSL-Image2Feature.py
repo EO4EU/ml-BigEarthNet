@@ -165,19 +165,19 @@ def create_app():
                                                       for elem in data["data"]:
                                                             imax=max(imax,elem["i"])
                                                             jmax=max(jmax,elem["j"])
-                                                      result=np.zeros((1,len(ALL_BANDS),(imax+120),(jmax+120)),dtype=np.float32)
+                                                      result=np.zeros((1,len(ALL_BANDS),(imax+120),(jmax+120)),dtype=np.int64)
                                                       for elem in data["data"]:
                                                             logger_workflow.info('elem i '+str(elem["i"])+' j '+str(elem["j"]), extra={'status': 'DEBUG'})
                                                             logger_workflow.info('elem shape '+str(elem["decompressed"].shape), extra={'status': 'DEBUG'})
                                                             logger_workflow.info('result shape '+str(result[0,:,elem["i"]:(elem["i"]+120),elem["j"]:(elem["j"]+120)].shape), extra={'status': 'DEBUG'})
-                                                            result[0,:,elem["i"]:(elem["i"]+120),elem["j"]:(elem["j"]+120)]=elem["decompressed"]
+                                                            result[0,:,elem["i"]:(elem["i"]+120),elem["j"]:(elem["j"]+120)]=elem["decompressed"].astype(np.int64)
                                                       for band_number,band in enumerate(ALL_BANDS):
                                                             app.logger.warning("cpOutput "+str(cpOutput))
                                                             app.logger.warning("file name "+folder.name)
                                                             outputPath=cpOutput.joinpath(folder.name,f"{folder.name}_{band}.jp2")
                                                             with outputPath.open('wb') as outputFile:
                                                                   #with rasterio.open(outputFile,mode='w',**data["meta"][ALL_BANDS[band_number]]) as file2:
-                                                                  with rasterio.open(outputFile,mode='w',driver="JP2OpenJPEG",width=imax+120,height=jmax+120,count=1) as file2:
+                                                                  with rasterio.open(outputFile,mode='w',driver="JP2OpenJPEG",width=imax+120,height=jmax+120,count=1,dtype=np.int64) as file2:
                                                                         file2.write(result[0][band_number], indexes=1)
                                     for folder in cp.iterdir():
                                           treatFolder(folder)
