@@ -239,7 +239,7 @@ def create_app():
                               logger_workflow.info('data shape '+str(data.shape), extra={'status': 'DEBUG'})
                               #BigEarthNetLoader.normalize_bands(data)
                               data=np.expand_dims(data.astype(np.float32),axis=0)
-                              inputs.append(httpclient.InferInput('int64_latent32_15',data.shape, "FP32"))
+                              inputs.append(httpclient.InferInput('int64_latent32_15',data.shape, "INT64"))
                               inputs[0].set_data_from_numpy(data, binary_data=True)
                               del data
                               outputs.append(httpclient.InferRequestedOutput('output_sentinel2_10_bands_120', binary_data=True))
