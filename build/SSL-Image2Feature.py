@@ -353,7 +353,7 @@ def create_app():
                                     byte_data= encoder.get_compressed()
                                     arrayResult.append(byte_data)
                               return arrayResult
-                        arrayResult=compress_lossless(result)
+                        arrayResult=await asyncio.to_thread(compress_lossless,result)
                         for i,byte_data in enumerate(arrayResult):
                               toInfer[task[1]]["result"+str(i)]=byte_data
                         logger_workflow.info('Compression done in '+str(time.time()-start_compress), extra={'status': 'DEBUG'})
@@ -382,7 +382,7 @@ def create_app():
             last_shown=time.time()
             start=time.time()-60
             for item in producer():
-                  while time.time()-last_throw<30 or nb_Created-nb_InferenceDone>1 or nb_Postprocess-nb_InferenceDone>1:
+                  while time.time()-last_throw<30 or nb_Created-nb_InferenceDone>5 or nb_Postprocess-nb_InferenceDone>5:
                         await asyncio.sleep(0)
                   task=asyncio.create_task(consume(item))
                   list_task.add(task)
