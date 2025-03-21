@@ -1,7 +1,7 @@
 default_context:
   chart_name: "bigearthnet-compression-code-to-image"
   chart_namespace: "test-bigearthnet"
-  chart_version: "0.1.66"
+  chart_version: "0.1.67"
   need_dep_chart: "no"
   include_service: "yes"
   service_name: "compression-code-to-image"

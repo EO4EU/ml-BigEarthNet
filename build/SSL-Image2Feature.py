@@ -167,7 +167,7 @@ def create_app():
                                                             jmax=max(jmax,elem["j"])
                                                       result=np.zeros((1,len(ALL_BANDS),(imax+1),(jmax+1)),dtype=np.float32)
                                                       for elem in data["data"]:
-                                                            result[0,:,elem["i"]:(elem["i"]+120),elem["j"]*120:(elem["j"]+120)]=elem["decompressed"]
+                                                            result[0,:,elem["i"]:(elem["i"]+120),elem["j"]:(elem["j"]+120)]=elem["decompressed"]
                                                       for band_number,band in enumerate(ALL_BANDS):
                                                             app.logger.warning("cpOutput "+str(cpOutput))
                                                             app.logger.warning("file name "+folder.name)
