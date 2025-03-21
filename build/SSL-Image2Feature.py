@@ -142,141 +142,48 @@ def create_app():
                               clientS3.set_as_default_client()
                               logger_workflow.info('Client is ready', extra={'status': 'INFO'})
                               cp = CloudPath("s3://"+s3_bucket_output+'/'+s3_path+'/INSITU', client=clientS3)
-                              cpOutput = CloudPath("s3://"+s3_bucket_output+'/result-image2code/')
-                              logger_workflow.info("path is s3://"+s3_bucket_output+'/result-image2code/', extra={'status': 'DEBUG'})
+                              cpOutput = CloudPath("s3://"+s3_bucket_output+'/result-code2image/')
+                              logger_workflow.info("path is s3://"+s3_bucket_output+'/result-code2image/', extra={'status': 'DEBUG'})
                               def fatalError(message):
                                     logger_workflow.error(message, extra={'status': 'CRITICAL'})
                               
                               with cpOutput.joinpath('log.txt').open('w') as fileOutput:
                                     meta=None
                                     def treatFolder(folder):
-                                                pattern=r'.*MSIL2A.*\.SAFE$'
+                                                pattern=r'.*\.pkl$'
                                                 match = re.search(pattern,folder.name)
                                                 if match:
                                                       logger_workflow.info('matched folder '+str(folder), extra={'status': 'DEBUG'})
-                                                      with tempfile.TemporaryDirectory() as tempdirBen:
-                                                            cpGranule=folder/"GRANULE"
-                                                            dicPath={}
-                                                            for folderGranule in cpGranule.iterdir():
-                                                                  logger_workflow.info("granule path "+str(folderGranule),extra={'status': 'DEBUG'})
-                                                                  cpIMGData10m=folderGranule/"IMG_DATA"/"R10m"
-                                                                  for image in cpIMGData10m.iterdir():
-                                                                        pattern=r'.*_(.*)_10m\.jp2$'
-                                                                        match = re.search(pattern,image.name)
-                                                                        logger_workflow.info("image path "+str(image),extra={'status': 'DEBUG'})
-                                                                        if match:
-                                                                              matchedBand=match.group(1)
-                                                                              logger_workflow.info("matchedBand "+matchedBand,extra={'status': 'DEBUG'})
-                                                                              if matchedBand in ['B02','B03','B04','B08']:
-                                                                                    logger_workflow.info("matchedBand 10m "+matchedBand,extra={'status': 'DEBUG'})
-                                                                                    path_src=image
-                                                                                    dicPath[matchedBand]=path_src
-                                                                        else:
-                                                                              logger_workflow.info("not matched",extra={'status': 'DEBUG'})
-                                                                  cpIMGData20m=folderGranule/"IMG_DATA"/"R20m"
-                                                                  for image in cpIMGData20m.iterdir():
-                                                                        pattern=r'.*_(.*)_20m\.jp2$'
-                                                                        match = re.search(pattern,image.name)
-                                                                        logger_workflow.info("image path "+str(image),extra={'status': 'DEBUG'})
-                                                                        if match:
-                                                                              logger_workflow.info("matched",extra={'status': 'DEBUG'})
-                                                                              matchedBand=match.group(1)
-                                                                              logger_workflow.info("matchedBand "+matchedBand,extra={'status': 'DEBUG'})
-                                                                              if matchedBand in ['B05','B06','B07','B8A','B11','B12']:
-                                                                                    logger_workflow.info("matchedBand 20m "+matchedBand,extra={'status': 'DEBUG'})
-                                                                                    path_src=image
-                                                                                    dicPath[matchedBand]=path_src
-                                                                        else:
-                                                                              logger_workflow.info("not matched",extra={'status': 'DEBUG'})
-                                                                  BANDS_10M = [
-                                                                              "B04",
-                                                                              "B03",
-                                                                              "B02",
-                                                                              "B08",
-                                                                              ]
-
-
-                                                                  BANDS_20M = [
-                                                                  "B05",
-                                                                  "B06",
-                                                                  "B07",
-                                                                  "B8A",
-                                                                  "B11",
-                                                                  "B12",
-                                                                  ]
-                                                                  
-                                                                  BANDS_ALL=BANDS_10M+BANDS_20M
-                                                                  bands_data = []
-                                                                  metaData={}
-                                                                  for band_name in BANDS_ALL:
-                                                                        if band_name not in dicPath:
-                                                                              logger_workflow.info("band_name "+band_name+" not found. Stopping treating folder "+str(folder),extra={'status': 'INFO'})
-                                                                              return
-                                                                        band_path = dicPath[band_name]
-                                                                        logger_workflow.info("band_path "+str(band_path),extra={'status': 'DEBUG'})
-                                                                        with band_path.open('rb') as fileBand, rasterio.io.MemoryFile(fileBand) as memfile:
-                                                                              with memfile.open(sharing=False) as band_file:
-                                                                                    band_data   = band_file.read(1,masked=True)  # open the tif image as a numpy array
-                                                                                    band_data=band_data.filled(np.nan)
-                                                                                    metaData[band_name] = band_file.meta
-                                                                                    # Resize depending on the resolution
-                                                                                    if band_name in BANDS_20M:
-                                                                                          h=band_data.shape[0]
-                                                                                          w=band_data.shape[1]
-                                                                                          # Carry out a bicubic interpolation (TUB does exactly this)
-                                                                                          band_data = cv2.resize(band_data, dsize=(2*h, 2*w), interpolation=cv2.INTER_CUBIC)
-                                                                                          # We have already ignored the 60M ones, and we keep the 10M ones intact
-                                                                                    #logging.info("appending")
-                                                                                    bands_data.append(band_data)
-                                                                                    logger_workflow.info("band_name "+band_name,extra={'status': 'DEBUG'})
-                                                                                    logger_workflow.info("band_data shape "+str(band_data.shape),extra={'status': 'DEBUG'})
-                                                                        band_file.close()
-
-                                                                  bands_data = np.stack(bands_data)
-                                                                  shape = bands_data.shape
-                                                                  h=shape[1]
-                                                                  w=shape[2]
-                                                                  h=min(h,1200)
-                                                                  w=min(w,1200)
-                                                                  if h<120 or w<120:
-                                                                        logger_workflow.info("Dimension too small, it should be at least 120. h "+str(h)+" w "+str(w)+"Stopping treating folder "+str(folder),extra={'status': 'INFO'})
-                                                                  to_infer=[]
-                                                                  for i in range(0,h,120):
-                                                                        for j in range(0,w,120):
-                                                                              view_data=bands_data[:,i:i+120,j:j+120]
-                                                                              valid=False
-                                                                              if view_data.shape[1]==120 and view_data.shape[2]==120:
-                                                                                    valid=True
-                                                                              if np.isnan(view_data).any():
-                                                                                    valid=False
-                                                                              if valid:
-                                                                                    dic={}
-                                                                                    dic['i']=i
-                                                                                    dic['j']=j
-                                                                                    dic['data']=bands_data
-                                                                                    to_infer.append(dic)
-                                                            asyncio.run(doInference(to_infer,logger_workflow,modelCompressor))
-                                                            for elem in to_infer:
-                                                                  elem['data']=None
-                                                            resultStore={}
-                                                            resultStore['meta']=metaData
-                                                            resultStore['data']=to_infer
-                                                            with cpOutput.joinpath(folder.name+'.pkl').open('wb') as outputFile:
-                                                                  pickle.dump(resultStore, outputFile)
-                                                            #bands_data = BigEarthNetLoader.normalize_bands(bands_data)
-                                                            # data=np.expand_dims(bands_data.astype(np.float32),axis=0)
-                                                            # result=doInference(data)
-                                                            # outputPath=cpOutput.joinpath(folderOutput.name)
-                                                            # with outputPath.open('w') as outputFile:
-                                                            #       json.dump(result, outputFile) 
+                                                      with folder.open('rb') as file:
+                                                            data=pickle.load(file)
+                                                      asyncio.run(doInference(data["data"],logger_workflow))
+                                                      ALL_BANDS = BigEarthNetLoader.BANDS_10M + BigEarthNetLoader.BANDS_20M
+                                                      imax=0
+                                                      jmax=0
+                                                      for elem in data["data"]:
+                                                            imax=max(imax,elem["i"])
+                                                            jmax=max(jmax,elem["j"])
+                                                      result=np.zeros((1,len(ALL_BANDS),imax+1,jmax+1),dtype=np.float32)
+                                                      for elem in data["data"]:
+                                                            result[0,:,elem["i"]*120:(elem["i"]+1)*120,elem["j"]*120:(elem["j"]+1)*120]=elem["decompressed"]
+                                                      for band_number,band in enumerate(ALL_BANDS):
+                                                            app.logger.warning("cpOutput "+str(cpOutput))
+                                                            app.logger.warning("file name "+file.name)
+                                                            outputPath=cpOutput.joinpath(file.name,f"{file.name}_{band}.tif")
+                                                            with outputPath.open('wb') as outputFile:
+                                                                  with rasterio.open(outputFile,mode='w',**data["meta"][ALL_BANDS[band_number]]) as file2:
+                                                                        file2.write(result[0][band_number], indexes=1)
                                     for folder in cp.iterdir():
                                           treatFolder(folder)
+                                    for folder in cp.joinpath('result-image2code').iterdir():
+                                          treatFolder(folder)
+
                               logger_workflow.info('Connecting to Kafka', extra={'status': 'DEBUG'})
 
                               response_json ={
                               "previous_component_end": "True",
                               "S3_bucket_desc": {
-                                    "folder": "result-image2code","filename": ""
+                                    "folder": "result-code2image","filename": ""
                               },
                               "meta_information": json_data_request.get('meta_information',{})}
                               Producer.send(kafka_out,key='key',value=response_json)
@@ -321,18 +228,22 @@ def create_app():
                               outputs=[]
                               iCord=toInfer[count]["i"]
                               jCord=toInfer[count]["j"]
-                              logger_workflow.info('orig shape '+str(toInfer[count]["data"].shape), extra={'status': 'DEBUG'})
-                              logger_workflow.info('iCord '+str(iCord)+' jCord '+str(jCord), extra={'status': 'DEBUG'})
-                              data=toInfer[count]["data"][:,iCord:iCord+120,jCord:jCord+120]
-                              data=BigEarthNetLoader.normalize_bands(data)
+                              def decompress_lossless(elem):
+                                    decompress_result=[]
+                                    for i in range(8):
+                                          data=elem["result"+str(i)]
+                                          decoder = constriction.stream.queue.RangeDecoder(data)
+                                          decompress_result.append(decoder.decode(modelCompressor[i],60*60).reshape(60,60))
+                                    return np.stack(decompress_result,axis=2)
+                              data=await asyncio.to_thread(decompress_lossless,toInfer[count])
                               logger_workflow.info('data shape '+str(data.shape), extra={'status': 'DEBUG'})
                               #BigEarthNetLoader.normalize_bands(data)
                               data=np.expand_dims(data.astype(np.float32),axis=0)
-                              inputs.append(httpclient.InferInput('input_sentinel2_10_bands_120',data.shape, "FP32"))
+                              inputs.append(httpclient.InferInput('int64_latent32_15',data.shape, "FP32"))
                               inputs[0].set_data_from_numpy(data, binary_data=True)
                               del data
-                              outputs.append(httpclient.InferRequestedOutput('int64_latent32_15', binary_data=True))
-                              results = await triton_client.infer('Bigearth-net-compression-compress-pytorch',inputs,outputs=outputs)
+                              outputs.append(httpclient.InferRequestedOutput('output_sentinel2_10_bands_120', binary_data=True))
+                              results = await triton_client.infer('Bigearth-net-compression-decompress-pytorch',inputs,outputs=outputs)
                               return (task,results)
                                     #toInfer[count]["result"]=results.as_numpy('probability')[0][0]
                   except Exception as e:
@@ -343,21 +254,9 @@ def create_app():
                   
             async def postprocess(task,results):
                   if task[0]==1:
-                        result=results.as_numpy('int64_latent32_15')[0]
+                        result=results.as_numpy('output_sentinel2_10_bands_120')[0]
                         logger_workflow.info('result shape '+str(result.shape), extra={'status': 'DEBUG'})
-                        start_compress=time.time()
-                        def compress_lossless(result):
-                              arrayResult=[]
-                              for i in range(8):
-                                    toCompress=result[:,:,i].flatten().astype(np.int32)
-                                    encoder = constriction.stream.queue.RangeEncoder()
-                                    encoder.encode(toCompress, coder[i])
-                                    byte_data= encoder.get_compressed()
-                                    arrayResult.append(byte_data)
-                              return arrayResult
-                        arrayResult=await asyncio.to_thread(compress_lossless,result)
-                        for i,byte_data in enumerate(arrayResult):
-                              toInfer[task[1]]["result"+str(i)]=byte_data
+                        toInfer[task[1]]["decompressed"]=result*10000
                         logger_workflow.info('Compression done in '+str(time.time()-start_compress), extra={'status': 'DEBUG'})
 
             def postprocessTask(task):
