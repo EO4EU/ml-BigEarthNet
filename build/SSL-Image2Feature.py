@@ -236,6 +236,8 @@ def create_app():
                                                                   shape = bands_data.shape
                                                                   h=shape[1]
                                                                   w=shape[2]
+                                                                  h=min(h,1200)
+                                                                  w=min(w,1200)
                                                                   if h<120 or w<120:
                                                                         logger_workflow.info("Dimension too small, it should be at least 120. h "+str(h)+" w "+str(w)+"Stopping treating folder "+str(folder),extra={'status': 'INFO'})
                                                                   to_infer=[]
@@ -259,7 +261,7 @@ def create_app():
                                                             resultStore={}
                                                             resultStore['meta']=metaData
                                                             resultStore['data']=to_infer
-                                                            with cpOutput.joinpath(folder.name+'.pkl').open('w') as outputFile:
+                                                            with cpOutput.joinpath(folder.name+'.pkl').open('wb') as outputFile:
                                                                   pickle.dump(resultStore, outputFile)
                                                             #bands_data = BigEarthNetLoader.normalize_bands(bands_data)
                                                             # data=np.expand_dims(bands_data.astype(np.float32),axis=0)
