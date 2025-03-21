@@ -163,7 +163,7 @@ def create_app():
                                                       for elem in data["data"]:
                                                             imax=max(imax,elem["i"])
                                                             jmax=max(jmax,elem["j"])
-                                                      result=np.zeros((1,len(ALL_BANDS),imax+1,jmax+1),dtype=np.float32)
+                                                      result=np.zeros((1,len(ALL_BANDS),(imax+1)*120,(jmax+1)*120),dtype=np.float32)
                                                       for elem in data["data"]:
                                                             result[0,:,elem["i"]*120:(elem["i"]+1)*120,elem["j"]*120:(elem["j"]+1)*120]=elem["decompressed"]
                                                       for band_number,band in enumerate(ALL_BANDS):
