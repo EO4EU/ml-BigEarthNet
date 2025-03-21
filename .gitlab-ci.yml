@@ -2,16 +2,16 @@
   image: mikebrown008/ci-cli-base:0.5
   variables:
     MINIO: s3.waw3-2.cloudferro.com
-    BUCKET: registry-inference-server-bigearthnet-compression-image-to-code
+    BUCKET: registry-inference-server-bigearthnet-compression-code-to-image
     GITLAB: git.apps.eo4eu.eu
     REPO_NAMESPACE: eo4eu/eo4eu-inference-server
     HELM_NAMESPACE: eo4eu/eo4eu-cicd/cicd-infra
     REGISTRY: registry.apps.eo4eu.eu
     REPO: bigearthnet
-    APP: eo4eu-wrapper-bigearthnet-compression-image-to-code
+    APP: eo4eu-wrapper-bigearthnet-compression-code-to-image
     SERVICE: eo4eu-inference-server
     HELM: helm-repo
-    REPO_BRANCH: compression-image-to-code
+    REPO_BRANCH: compression-code-to-image
     HELM_BRANCH: main
     COOKIECUTTER_BRANCH: inference-server-uc
   before_script:
