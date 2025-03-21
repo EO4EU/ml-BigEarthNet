@@ -165,9 +165,9 @@ def create_app():
                                                       for elem in data["data"]:
                                                             imax=max(imax,elem["i"])
                                                             jmax=max(jmax,elem["j"])
-                                                      result=np.zeros((1,len(ALL_BANDS),(imax+1)*120,(jmax+1)*120),dtype=np.float32)
+                                                      result=np.zeros((1,len(ALL_BANDS),(imax+1),(jmax+1)),dtype=np.float32)
                                                       for elem in data["data"]:
-                                                            result[0,:,elem["i"]*120:(elem["i"]+1)*120,elem["j"]*120:(elem["j"]+1)*120]=elem["decompressed"]
+                                                            result[0,:,elem["i"]:(elem["i"]+120),elem["j"]*120:(elem["j"]+120)]=elem["decompressed"]
                                                       for band_number,band in enumerate(ALL_BANDS):
                                                             app.logger.warning("cpOutput "+str(cpOutput))
                                                             app.logger.warning("file name "+folder.name)
@@ -175,10 +175,6 @@ def create_app():
                                                             with outputPath.open('wb') as outputFile:
                                                                   with rasterio.open(outputFile,mode='w',**data["meta"][ALL_BANDS[band_number]]) as file2:
                                                                         file2.write(result[0][band_number], indexes=1)
-                                                                        logger_workflow.info('Writing band '+str(band_number)+" done", extra={'status': 'DEBUG'})
-                                                                  gc.collect()
-                                                      del result
-                                                      gc.collect()
                                     for folder in cp.iterdir():
                                           treatFolder(folder)
                                     for folder in cp.joinpath('result-image2code').iterdir():
