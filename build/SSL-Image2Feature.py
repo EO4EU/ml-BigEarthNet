@@ -175,10 +175,11 @@ def create_app():
                                                             app.logger.warning("cpOutput "+str(cpOutput))
                                                             app.logger.warning("file name "+folder.name)
                                                             outputPath=cpOutput.joinpath(folder.name,f"{folder.name}_{band}.jp2")
-                                                            with outputPath.open('wb') as outputFile:
+                                                            with outputPath.open('wb') as outputFile,rasterio.io.MemoryFile() as memfile:
                                                                   #with rasterio.open(outputFile,mode='w',**data["meta"][ALL_BANDS[band_number]]) as file2:
-                                                                  with rasterio.open(outputFile,mode='w',driver="JP2OpenJPEG",width=imax+120,height=jmax+120,count=1,dtype="uint16",crs=data["meta"][ALL_BANDS[band_number]]["crs"],transform=data["meta"][ALL_BANDS[band_number]]["transform"]) as file2:
+                                                                  with memfile.open(outputFile,mode='w',driver="JP2OpenJPEG",width=imax+120,height=jmax+120,count=1,dtype="uint16",crs=data["meta"][ALL_BANDS[band_number]]["crs"],transform=data["meta"][ALL_BANDS[band_number]]["transform"]) as file2:
                                                                         file2.write(result[0][band_number], indexes=1)
+                                                                  outputFile.write(memfile.read())
                                     for folder in cp.iterdir():
                                           treatFolder(folder)
                                     for folder in cp.joinpath('result-image2code').iterdir():
