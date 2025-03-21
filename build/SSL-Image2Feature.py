@@ -382,7 +382,7 @@ def create_app():
             last_shown=time.time()
             start=time.time()-60
             for item in producer():
-                  while time.time()-last_throw<30 or nb_Created-nb_InferenceDone>5 or nb_Postprocess-nb_InferenceDone>5:
+                  while time.time()-last_throw<30 or nb_Created-nb_InferenceDone>1 or nb_Postprocess-nb_InferenceDone>1:
                         await asyncio.sleep(0)
                   task=asyncio.create_task(consume(item))
                   list_task.add(task)
