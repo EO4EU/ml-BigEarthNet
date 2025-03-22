@@ -262,6 +262,7 @@ def create_app():
             async def postprocess(task,results):
                   if task[0]==1:
                         result=results.as_numpy('output_sentinel2_10_bands_120')[0]
+                        result=result.copy()
                         logger_workflow.info('result shape '+str(result.shape), extra={'status': 'DEBUG'})
                         for band in range(10):
                               result[band]=result[band]*toInfer[task[1]]["max"+str(band)]
