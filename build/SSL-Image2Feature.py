@@ -263,7 +263,9 @@ def create_app():
                   if task[0]==1:
                         result=results.as_numpy('output_sentinel2_10_bands_120')[0]
                         logger_workflow.info('result shape '+str(result.shape), extra={'status': 'DEBUG'})
-                        toInfer[task[1]]["decompressed"]=result*10000
+                        for band in range(10):
+                              result[band]=result[band]*toInfer[task[1]]["max"+str(band)]
+                        toInfer[task[1]]["decompressed"]=result
 
             def postprocessTask(task):
                   list_task.discard(task)
