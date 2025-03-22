@@ -324,6 +324,8 @@ def create_app():
                               logger_workflow.info('orig shape '+str(toInfer[count]["data"].shape), extra={'status': 'DEBUG'})
                               logger_workflow.info('iCord '+str(iCord)+' jCord '+str(jCord), extra={'status': 'DEBUG'})
                               data=toInfer[count]["data"][:,iCord:iCord+120,jCord:jCord+120]
+                              for band in range(10):
+                                    toInfer[count]["max"+str(band)]=data[band].max()
                               data=BigEarthNetLoader.normalize_bands(data)
                               logger_workflow.info('data shape '+str(data.shape), extra={'status': 'DEBUG'})
                               #BigEarthNetLoader.normalize_bands(data)
