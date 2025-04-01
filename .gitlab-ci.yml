@@ -11,9 +11,16 @@
     APP: eo4eu-wrapper-bigearthnet-compression-code-to-image
     SERVICE: eo4eu-inference-server
     HELM: helm-repo
-    REPO_BRANCH: compression-code-to-image
-    HELM_BRANCH: main
     COOKIECUTTER_BRANCH: inference-server-uc
+  rules:
+  - if: $CI_COMMIT_BRANCH == "compression-code-to-image"
+    variables: 
+      REPO_BRANCH: compression-code-to-image
+      HELM_BRANCH: main
+  - if: $CI_COMMIT_BRANCH == "compression-code-to-image-dev"
+    variables: 
+      REPO_BRANCH: compression-code-to-image-dev
+      HELM_BRANCH: dev
   before_script:
     - "apk --no-cache add jq"
     - "export VAULT_TOKEN=$(curl -s -X PUT \
