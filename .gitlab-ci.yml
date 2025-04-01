@@ -11,9 +11,16 @@
     APP: eo4eu-wrapper-bigearthnet-democlassifier-ssl-feature-to-class
     SERVICE: eo4eu-inference-server
     HELM: helm-repo
-    REPO_BRANCH: democlassifier-ssl-feature-to-class
-    HELM_BRANCH: main
     COOKIECUTTER_BRANCH: inference-server-uc
+  rules:
+  - if: $CI_COMMIT_BRANCH == "democlassifier-ssl-feature-to-class"
+    variables: 
+      REPO_BRANCH: democlassifier-ssl-feature-to-class
+      HELM_BRANCH: main
+  - if: $CI_COMMIT_BRANCH == "democlassifier-ssl-feature-to-class-dev"
+    variables: 
+      REPO_BRANCH: democlassifier-ssl-feature-to-class-dev
+      HELM_BRANCH: dev
   before_script:
     - "apk --no-cache add jq"
     - "export VAULT_TOKEN=$(curl -s -X PUT \
