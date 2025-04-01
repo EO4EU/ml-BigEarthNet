@@ -13,7 +13,7 @@
     HELM: helm-repo
     COOKIECUTTER_BRANCH: inference-server-uc
   rules:
-  - if: $CI_COMMIT_BRANCH == "main"
+  - if: $CI_COMMIT_BRANCH == "SSL-Image-To-Feature-raw-s2"
     variables: 
       REPO_BRANCH: SSL-Image-To-Feature-raw-s2
       HELM_BRANCH: main
