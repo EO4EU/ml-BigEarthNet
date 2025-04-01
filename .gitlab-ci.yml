@@ -11,9 +11,16 @@
     APP: eo4eu-wrapper-bigearthnet-image-to-feature-raw-s2
     SERVICE: eo4eu-inference-server
     HELM: helm-repo
-    REPO_BRANCH: SSL-Image-To-Feature-raw-s2
-    HELM_BRANCH: main
     COOKIECUTTER_BRANCH: inference-server-uc
+  rules:
+  - if: $CI_COMMIT_BRANCH == "main"
+    variables: 
+      REPO_BRANCH: SSL-Image-To-Feature-raw-s2
+      HELM_BRANCH: main
+  - if: $CI_COMMIT_BRANCH == "SSL-Image-To-Feature-raw-s2-dev"
+    variables: 
+      REPO_BRANCH: SSL-Image-To-Feature-raw-s2-dev
+      HELM_BRANCH: dev
   before_script:
     - "apk --no-cache add jq"
     - "export VAULT_TOKEN=$(curl -s -X PUT \
