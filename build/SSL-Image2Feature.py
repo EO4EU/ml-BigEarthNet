@@ -100,7 +100,7 @@ def create_app():
                               app.logger.addHandler(console_handler)
                               app.logger.setLevel(logging.DEBUG)
 
-                              logger_app = logging.LoggerAdapter(app.logger, {'source': 'ML.shared.democlassifier'},merge_extra=True)
+                              logger_app = logging.LoggerAdapter(app.logger, {'source': component_name},merge_extra=True)
                               logger_workflow = logging.LoggerAdapter(logger_app, {'workflow_name': workflow_name,'producer':Producer},merge_extra=True)
                               logger_workflow.info('Starting Workflow',extra={'status':'START'})
                               logger_workflow.info('Reading json data request'+str(json_data_request), extra={'status': 'DEBUG'})
