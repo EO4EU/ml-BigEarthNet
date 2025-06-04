@@ -50,6 +50,13 @@ import gc
 def create_app():
 
       app = Flask(__name__)
+      app.logger.setLevel(logging.DEBUG)
+      handler = KafkaHandler()
+      handler.setLevel(logging.INFO)
+      filter = DefaultContextFilter()
+      app.logger.addHandler(handler)
+      app.logger.addFilter(filter)
+      app.logger.info("Application Starting up...", extra={'status': 'DEBUG'})
 
       with app.app_context():
             countDic=torch.load("/app/resultTrain8.tar",map_location=torch.device('cpu'))
@@ -98,59 +105,48 @@ def create_app():
             # Message received.
             response=None
             try:
-                  config.load_incluster_config()
-                  api_instance = client.CoreV1Api()
-                  configmap_name = str(name)
-                  configmap_namespace = 'test-bigearthnet'
-                  api_response = api_instance.read_namespaced_config_map(configmap_name, configmap_namespace)
-                  json_data_request = json.loads(request.data)
-                  json_data_configmap =json.loads(str(api_response.data['jsonSuperviserRequest']))      
-                  workflow_name = json_data_configmap.get('workflow_name', '')
-                  bootstrapServers =api_response.data['bootstrapServers']
-                  component_name = json_data_configmap['ML']['component_name']
-                  while True:
-                        try:
-                              Producer=KafkaProducer(bootstrap_servers=bootstrapServers,value_serializer=lambda v: json.dumps(v).encode('utf-8'),key_serializer=str.encode)
-                              handler = KafkaHandler(defaultproducer=Producer)
-                              console_handler = logging.StreamHandler()
-                              console_handler.setLevel(logging.DEBUG)
-                              filter = DefaultContextFilter()
-                              app.logger.addFilter(filter)
-                              app.logger.addHandler(handler)
-                              app.logger.addHandler(console_handler)
-                              app.logger.setLevel(logging.DEBUG)
+                  raw_data = request.data
+                  
 
-                              logger_app = logging.LoggerAdapter(app.logger, {'source': component_name},merge_extra=True)
-                              logger_workflow = logging.LoggerAdapter(logger_app, {'workflow_name': workflow_name,'producer':Producer},merge_extra=True)
+                  def threadentry(raw_data):
+                        config.load_incluster_config()
+                        api_instance = client.CoreV1Api()
+                        configmap_name = str(name)
+                        configmap_namespace = 'test-bigearthnet'
+                        api_response = api_instance.read_namespaced_config_map(configmap_name, configmap_namespace)
+                        json_data_request = json.loads(raw_data)
+                        json_data_configmap =json.loads(str(api_response.data['jsonSuperviserRequest']))      
+                        workflow_name = json_data_configmap.get('workflow_name', '')
+                        bootstrapServers =api_response.data['bootstrapServers']
+                        component_name = json_data_configmap['ML']['component_name']
+                        while True:
+                              try:
+                                    Producer=KafkaProducer(bootstrap_servers=bootstrapServers,value_serializer=lambda v: json.dumps(v).encode('utf-8'),key_serializer=str.encode)
+                                    break
+                              except Exception as e:
+                                    app.logger.error('Got exception '+str(e)+'\n'+traceback.format_exc()+'\n'+'So we are retrying', extra={'status': 'CRITICAL'})
+                        try:
+                              logger_workflow = logging.LoggerAdapter(app.logger, {'source': component_name,'workflow_name': workflow_name,'producer':Producer},merge_extra=True)
                               logger_workflow.info('Starting Workflow',extra={'status':'START'})
-                              logger_workflow.info('Reading json data request'+str(json_data_request), extra={'status': 'DEBUG'})
-                              logger_workflow.info('Reading json data configmap'+str(json_data_configmap), extra={'status': 'DEBUG'})
-                              break
-                        except Exception as e:
-                              app.logger.error('Got exception '+str(e)+'\n'+traceback.format_exc()+'\n'+'So we are retrying', extra={'status': 'CRITICAL'})
+                              if not(json_data_request['previous_component_end'] == 'True' or json_data_request['previous_component_end']):
+                                    class PreviousComponentEndException(Exception):
+                                          pass
+                                    raise PreviousComponentEndException('Previous component did not end correctly')
 
-                  if not(json_data_request['previous_component_end'] == 'True' or json_data_request['previous_component_end']):
-                        class PreviousComponentEndException(Exception):
-                              pass
-                        raise PreviousComponentEndException('Previous component did not end correctly')
-
-                  kafka_out = json_data_configmap['Topics']["out"]
-                  s3_access_key = json_data_configmap['S3_bucket']['aws_access_key_id']
-                  s3_secret_key = json_data_configmap['S3_bucket']['aws_secret_access_key']
-                  s3_bucket_output = json_data_configmap['S3_bucket']['s3-bucket-name']
-                  s3_region_endpoint = json_data_configmap['S3_bucket']['endpoint_url']
-                  s3_path = json_data_request['S3_bucket_desc']['folder']
-                  s3_file = json_data_request['S3_bucket_desc'].get('filename',None)
-
-                  def threadentry():
-                        try:
-                              logger_workflow.info('All json data read', extra={'status': 'INFO'})
+                              kafka_out = json_data_configmap['Topics']["out"]
+                              s3_access_key = json_data_configmap['S3_bucket']['aws_access_key_id']
+                              s3_secret_key = json_data_configmap['S3_bucket']['aws_secret_access_key']
+                              s3_bucket_output = json_data_configmap['S3_bucket']['s3-bucket-name']
+                              s3_region_endpoint = json_data_configmap['S3_bucket']['endpoint_url']
+                              s3_path = json_data_request['S3_bucket_desc']['folder']
+                              s3_file = json_data_request['S3_bucket_desc'].get('filename',None)
+                              logger_workflow.debug('All json data read', extra={'status': 'INFO'})
                               clientS3 = S3Client(aws_access_key_id=s3_access_key, aws_secret_access_key=s3_secret_key,endpoint_url=s3_region_endpoint)
                               clientS3.set_as_default_client()
-                              logger_workflow.info('Client is ready', extra={'status': 'INFO'})
+                              logger_workflow.debug('Client is ready', extra={'status': 'INFO'})
                               cp = CloudPath("s3://"+s3_bucket_output+'/'+s3_path+'/INSITU', client=clientS3)
                               cpOutput = CloudPath("s3://"+s3_bucket_output+'/result-code2image/')
-                              logger_workflow.info("path is s3://"+s3_bucket_output+'/result-code2image/', extra={'status': 'DEBUG'})
+                              logger_workflow.debug("path is s3://"+s3_bucket_output+'/result-code2image/', extra={'status': 'DEBUG'})
                               def fatalError(message):
                                     logger_workflow.error(message, extra={'status': 'CRITICAL'})
                               
@@ -160,7 +156,7 @@ def create_app():
                                                 pattern=r'.*\.pkl$'
                                                 match = re.search(pattern,folder.name)
                                                 if match:
-                                                      logger_workflow.info('matched folder '+str(folder), extra={'status': 'DEBUG'})
+                                                      logger_workflow.debug('matched folder '+str(folder), extra={'status': 'DEBUG'})
                                                       with folder.open('rb') as file:
                                                             data=pickle.load(file)
                                                       asyncio.run(doInference(data["data"],logger_workflow,modelCompressor))
@@ -172,13 +168,13 @@ def create_app():
                                                             jmax=max(jmax,elem["j"])
                                                       result=np.zeros((1,len(ALL_BANDS),(imax+120),(jmax+120)),dtype=np.int64)
                                                       for elem in data["data"]:
-                                                            logger_workflow.info('elem i '+str(elem["i"])+' j '+str(elem["j"]), extra={'status': 'DEBUG'})
-                                                            logger_workflow.info('elem shape '+str(elem["decompressed"].shape), extra={'status': 'DEBUG'})
-                                                            logger_workflow.info('result shape '+str(result[0,:,elem["i"]:(elem["i"]+120),elem["j"]:(elem["j"]+120)].shape), extra={'status': 'DEBUG'})
+                                                            logger_workflow.debug('elem i '+str(elem["i"])+' j '+str(elem["j"]), extra={'status': 'DEBUG'})
+                                                            logger_workflow.debug('elem shape '+str(elem["decompressed"].shape), extra={'status': 'DEBUG'})
+                                                            logger_workflow.debug('result shape '+str(result[0,:,elem["i"]:(elem["i"]+120),elem["j"]:(elem["j"]+120)].shape), extra={'status': 'DEBUG'})
                                                             result[0,:,elem["i"]:(elem["i"]+120),elem["j"]:(elem["j"]+120)]=elem["decompressed"].astype(np.int64)
                                                       for band_number,band in enumerate(ALL_BANDS):
-                                                            app.logger.warning("cpOutput "+str(cpOutput))
-                                                            app.logger.warning("file name "+folder.name)
+                                                            logger_workflow.debug("cpOutput "+str(cpOutput))
+                                                            logger_workflow.debug("file name "+folder.name)
                                                             outputPath=cpOutput.joinpath(folder.name,f"{folder.name}_{band}.jp2")
                                                             with outputPath.open('wb') as outputFile,rasterio.io.MemoryFile() as memfile:
                                                                   #with rasterio.open(outputFile,mode='w',**data["meta"][ALL_BANDS[band_number]]) as file2:
@@ -190,7 +186,7 @@ def create_app():
                                     for folder in cp.joinpath('result-image2code').iterdir():
                                           treatFolder(folder)
 
-                              logger_workflow.info('Connecting to Kafka', extra={'status': 'DEBUG'})
+                              logger_workflow.debug('Connecting to Kafka', extra={'status': 'DEBUG'})
 
                               response_json ={
                               "previous_component_end": "True",
@@ -207,13 +203,13 @@ def create_app():
                               return
                         logger_workflow.info('workflow finished successfully',extra={'status':'SUCCESS'})
 
-                  thread = threading.Thread(target=threadentry)
+                  thread = threading.Thread(target=threadentry, args=(raw_data,))
                   thread.start()
                   response = make_response({
                               "msg": "Started the process"
                               })
             except Exception as e:
-                  logger_workflow.error('Got exception '+str(e)+'\n'+traceback.format_exc()+'\n'+'So we are ignoring the message', extra={'status': 'CRITICAL'})
+                  app.logger.error('Got exception '+str(e)+'\n'+traceback.format_exc()+'\n'+'So we are ignoring the message', extra={'status': 'CRITICAL'})
                   # HTTP answer that the message is malformed. This message will then be discarded only the fact that a sucess return code is returned is important.
                   response = make_response({
                   "msg": "There was a problem ignoring"
@@ -248,7 +244,7 @@ def create_app():
                                           decompress_result.append(decoder.decode(modelCompressor[i],60*60).reshape(60,60))
                                     return np.stack(decompress_result,axis=2).astype(np.int64)
                               data=await asyncio.to_thread(decompress_lossless,toInfer[count])
-                              logger_workflow.info('data shape '+str(data.shape), extra={'status': 'DEBUG'})
+                              logger_workflow.debug('data shape '+str(data.shape), extra={'status': 'DEBUG'})
                               #BigEarthNetLoader.normalize_bands(data)
                               data=np.expand_dims(data,axis=0)
                               inputs.append(httpclient.InferInput('int64_latent32_15',data.shape, "INT64"))
@@ -259,7 +255,7 @@ def create_app():
                               return (task,results)
                                     #toInfer[count]["result"]=results.as_numpy('probability')[0][0]
                   except Exception as e:
-                        logger_workflow.error('Got exception in inference '+str(e)+'\n'+traceback.format_exc(), extra={'status': 'WARNING'})
+                        logger_workflow.debug('Got exception in inference '+str(e)+'\n'+traceback.format_exc(), extra={'status': 'WARNING'})
                         nonlocal last_throw
                         last_throw=time.time()
                         return await consume(task)
@@ -268,7 +264,7 @@ def create_app():
                   if task[0]==1:
                         result=results.as_numpy('output_sentinel2_10_bands_120')[0]
                         result=result.copy()
-                        logger_workflow.info('result shape '+str(result.shape), extra={'status': 'DEBUG'})
+                        logger_workflow.debug('result shape '+str(result.shape), extra={'status': 'DEBUG'})
                         for band in range(10):
                               result[band]=result[band]*toInfer[task[1]]["max"+str(band)]
                         toInfer[task[1]]["decompressed"]=result
@@ -305,11 +301,11 @@ def create_app():
                   nb_Created+=1
                   if time.time()-last_shown>60:
                         last_shown=time.time()
-                        logger_workflow.info('done instance '+str(nb_done_instance)+'Inference done value '+str(nb_InferenceDone)+' postprocess done '+str(nb_Postprocess)+ ' created '+str(nb_Created), extra={'status': 'DEBUG'})
+                        logger_workflow.debug('done instance '+str(nb_done_instance)+'Inference done value '+str(nb_InferenceDone)+' postprocess done '+str(nb_Postprocess)+ ' created '+str(nb_Created), extra={'status': 'DEBUG'})
             while nb_InferenceDone-nb_Created>0 or nb_Postprocess-nb_InferenceDone>0:
                   await asyncio.sleep(0)
             await asyncio.gather(*list_task,*list_postprocess)
-            logger_workflow.info('Inference done', extra={'status': 'DEBUG'})
+            logger_workflow.debug('Inference done', extra={'status': 'DEBUG'})
             await triton_client.close()
       return app
 
