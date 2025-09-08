@@ -269,27 +269,3 @@ def create_app():
             logger_workflow.debug('Inference done', extra={'status': 'DEBUG'})
             await triton_client.close()
       return app
-
-                        
-
-# # This function is used to do the inference on the data.
-# # It will connect to the triton server and send the data to it.
-# # The result will be returned.
-# # The data should be a numpy array of shape (1,10,120,120) and type float32.
-# # The result will be a json with the following fields:
-# # model_name : The name of the model used.
-# # outputs : The result of the inference.
-# def doInference(data):
-#       inputs = []
-#       outputs = []
-#       inputs.append(httpclient.InferInput('input_sentinel2_10_bands_120', [1, 10,120,120], "FP32"))
-#       inputs[0].set_data_from_numpy(data, binary_data=True)
-#       outputs.append(httpclient.InferRequestedOutput('representation_2048', binary_data=False))
-
-#       triton_client = httpclient.InferenceServerClient(url="bigearthnet4-predictor-default.test-bigearthnet.svc.ecmwf-inference-server.local", verbose=False)
-#       results = triton_client.infer(
-#         'Bigearth-net-ssl-label',
-#         inputs,
-#         outputs=outputs)
-#       return results.get_response()
-#      return app

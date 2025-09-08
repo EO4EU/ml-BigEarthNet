@@ -1,7 +1,7 @@
 default_context:
   chart_name: "bigearthnet-democlassifier-ssl-feature-to-class"
   chart_namespace: "test-bigearthnet"
-  chart_version: "0.0.17"
+  chart_version: "0.0.18"
   need_dep_chart: "no"
   include_service: "yes"
   service_name: "democlassifier-ssl-feature-to-class"
