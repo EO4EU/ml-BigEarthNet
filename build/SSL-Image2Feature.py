@@ -157,7 +157,7 @@ def create_app():
 
                                     for folder in cp.joinpath('INSITU').iterdir():
                                           treatFolder(folder)
-                                    for folder in cp.joinpath('result-image2feature').iterdir():
+                                    for folder in cp.iterdir():
                                           treatFolder(folder)
                               logger_workflow.debug('Connecting to Kafka', extra={'status': 'DEBUG'})
 
