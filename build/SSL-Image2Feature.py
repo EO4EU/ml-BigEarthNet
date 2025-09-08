@@ -156,6 +156,7 @@ def create_app():
                                                       json.dump(convert_bytes(data), outputFile)                                         
 
                                     for folder in cp.iterdir():
+                                          logger_workflow.debug('treating folder '+str(folder), extra={'status': 'DEBUG'})
                                           treatFolder(folder)
                                     for folder in cp.joinpath('result-feature2class').iterdir():
                                           treatFolder(folder)
