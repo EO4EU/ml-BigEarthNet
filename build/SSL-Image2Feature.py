@@ -156,9 +156,8 @@ def create_app():
                                                       json.dump(convert_bytes(data), outputFile)                                         
 
                                     for folder in cp.joinpath('INSITU').iterdir():
-                                          logger_workflow.debug('treating folder '+str(folder), extra={'status': 'DEBUG'})
                                           treatFolder(folder)
-                                    for folder in cp.joinpath('result-feature2class').iterdir():
+                                    for folder in cp.joinpath('result-image2feature').iterdir():
                                           treatFolder(folder)
                               logger_workflow.debug('Connecting to Kafka', extra={'status': 'DEBUG'})
 
