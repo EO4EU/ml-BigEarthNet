@@ -76,7 +76,7 @@ class Bigearthnet:
                 self.registry(bucket, endpoint, access, secret)
             )            
             .with_mounted_directory("/kaniko/.docker", wkd)
-            .with_mounted_secret("/tmp/config.json", auth_blob, owner = "1000:1000")
+            .with_mounted_secret("/kaniko/.docker/config.json", auth_blob)
             .with_exec(
                 [
                     "/kaniko/executor",
