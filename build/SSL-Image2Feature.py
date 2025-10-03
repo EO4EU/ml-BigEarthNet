@@ -155,10 +155,11 @@ def create_app():
                                                 with cpOutput.joinpath(folder.name).open('w') as outputFile:
                                                       json.dump(convert_bytes(data), outputFile)                                         
 
-                                    for folder in cp.joinpath('INSITU').iterdir():
-                                          treatFolder(folder)
-                                    for folder in cp.iterdir():
-                                          treatFolder(folder)
+                                    def search_folder(cp):
+                                          for folder in cp.iterdir():
+                                                treatFolder(folder)
+                                                search_folder(folder)
+                                    search_folder(cp)
                               logger_workflow.debug('Connecting to Kafka', extra={'status': 'DEBUG'})
 
                               response_json ={
