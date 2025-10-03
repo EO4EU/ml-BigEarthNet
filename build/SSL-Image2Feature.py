@@ -244,9 +244,11 @@ def create_app():
                                                             # result=doInference(data)
                                                             # outputPath=cpOutput.joinpath(folderOutput.name)
                                                             # with outputPath.open('w') as outputFile:
-                                                            #       json.dump(result, outputFile) 
-                                    for folder in cp.iterdir():
-                                          treatFolder(folder)
+                                                            #       json.dump(result, outputFile)
+                                    def loop_on_folders(cp):
+                                          for folder in cp.iterdir():
+                                                treatFolder(folder)
+                                                loop_on_folders(folder)
                               logger_workflow.debug('Connecting to Kafka', extra={'status': 'DEBUG'})
 
                               response_json ={
