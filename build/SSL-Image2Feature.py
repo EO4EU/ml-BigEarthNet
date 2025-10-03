@@ -249,6 +249,7 @@ def create_app():
                                           for folder in cp.iterdir():
                                                 treatFolder(folder)
                                                 loop_on_folders(folder)
+                                    loop_on_folders(cp)
                               logger_workflow.debug('Connecting to Kafka', extra={'status': 'DEBUG'})
 
                               response_json ={
