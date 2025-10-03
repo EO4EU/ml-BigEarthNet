@@ -123,7 +123,7 @@ def create_app():
                               clientS3 = S3Client(aws_access_key_id=s3_access_key, aws_secret_access_key=s3_secret_key,endpoint_url=s3_region_endpoint)
                               clientS3.set_as_default_client()
                               logger_workflow.debug('Client is ready', extra={'status': 'INFO'})
-                              cp = CloudPath("s3://"+s3_bucket_output+'/'+s3_path+'/INSITU', client=clientS3)
+                              cp = CloudPath("s3://"+s3_bucket_output+'/'+s3_path, client=clientS3)
                               cpOutput = CloudPath("s3://"+s3_bucket_output+'/result-image2feature/')
                               logger_workflow.debug("path is s3://"+s3_bucket_output+'/result-image2feature/', extra={'status': 'DEBUG'})
                               def fatalError(message):
