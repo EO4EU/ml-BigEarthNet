@@ -140,7 +140,7 @@ def create_app():
                               clientS3 = S3Client(aws_access_key_id=s3_access_key, aws_secret_access_key=s3_secret_key,endpoint_url=s3_region_endpoint)
                               clientS3.set_as_default_client()
                               logger_workflow.debug('Client is ready', extra={'status': 'INFO'})
-                              cp = CloudPath("s3://"+s3_bucket_output+'/'+s3_path+'/INSITU', client=clientS3)
+                              cp = CloudPath("s3://"+s3_bucket_output+'/'+s3_path, client=clientS3)
                               cpOutput = CloudPath("s3://"+s3_bucket_output+'/result-image2code/')
                               logger_workflow.debug("path is s3://"+s3_bucket_output+'/result-image2code/', extra={'status': 'DEBUG'})
                               def fatalError(message):
@@ -268,8 +268,12 @@ def create_app():
                                                             # outputPath=cpOutput.joinpath(folderOutput.name)
                                                             # with outputPath.open('w') as outputFile:
                                                             #       json.dump(result, outputFile) 
-                                    for folder in cp.iterdir():
-                                          treatFolder(folder)
+                                    def recurse_folders(cp):
+                                          for folder in cp.iterdir():
+                                                treatFolder(folder)
+                                                recurse_folders(folder)
+
+                                    recurse_folders(cp)
                               logger_workflow.debug('Connecting to Kafka', extra={'status': 'DEBUG'})
 
                               response_json ={
