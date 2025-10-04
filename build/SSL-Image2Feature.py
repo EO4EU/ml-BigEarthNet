@@ -363,6 +363,7 @@ def create_app():
                         arrayResult=await asyncio.to_thread(compress_lossless,result)
                         for i,byte_data in enumerate(arrayResult):
                               toInfer[task[1]]["result"+str(i)]=byte_data
+                              logger_workflow.debug('i '+str(i), extra={'status': 'DEBUG'})
                         logger_workflow.debug('Compression done in '+str(time.time()-start_compress), extra={'status': 'DEBUG'})
 
             def postprocessTask(task):
