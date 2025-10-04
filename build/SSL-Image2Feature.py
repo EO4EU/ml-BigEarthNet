@@ -291,7 +291,7 @@ def create_app():
                               return
                         logger_workflow.info('workflow finished successfully',extra={'status':'SUCCESS'})
 
-                  thread = threading.Thread(target=threadentry)
+                  thread = threading.Thread(target=threadentry, args=(raw_data,))
                   thread.start()
                   response = make_response({
                               "msg": "Started the process"
