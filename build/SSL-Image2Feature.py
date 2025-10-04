@@ -144,7 +144,7 @@ def create_app():
                               clientS3 = S3Client(aws_access_key_id=s3_access_key, aws_secret_access_key=s3_secret_key,endpoint_url=s3_region_endpoint)
                               clientS3.set_as_default_client()
                               logger_workflow.debug('Client is ready', extra={'status': 'INFO'})
-                              cp = CloudPath("s3://"+s3_bucket_output+'/'+s3_path+'/INSITU', client=clientS3)
+                              cp = CloudPath("s3://"+s3_bucket_output+'/'+s3_path, client=clientS3)
                               cpOutput = CloudPath("s3://"+s3_bucket_output+'/result-code2image/')
                               logger_workflow.debug("path is s3://"+s3_bucket_output+'/result-code2image/', extra={'status': 'DEBUG'})
                               def fatalError(message):
@@ -181,10 +181,11 @@ def create_app():
                                                                   with memfile.open(driver="JP2OpenJPEG",width=imax+120,height=jmax+120,count=1,dtype="uint16",crs=data["meta"][ALL_BANDS[band_number]]["crs"],transform=data["meta"][ALL_BANDS[band_number]]["transform"]) as file2:
                                                                         file2.write(result[0][band_number], indexes=1)
                                                                   outputFile.write(memfile.read())
-                                    for folder in cp.iterdir():
-                                          treatFolder(folder)
-                                    for folder in cp.joinpath('result-image2code').iterdir():
-                                          treatFolder(folder)
+                                    def recurse_folders(cp):
+                                          for folder in cp.iterdir():
+                                                treatFolder(folder)
+                                                recurse_folders(folder)
+                                    recurse_folders(cp)
 
                               logger_workflow.debug('Connecting to Kafka', extra={'status': 'DEBUG'})
 
