@@ -97,10 +97,15 @@ build_image:
         --wkd build
       fi
 scan_image:
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main" && $CI_COMMIT_MESSAGE =~ /trivy/'
+    - when: never
   extends: [.dagger]
   tags: [dagger]
   stage: test
-  needs: [build_image]
+  needs:
+    - job: build_image
+      optional: true
   dependencies: [build_image]
   script:
     - cd $REPO
@@ -129,7 +134,11 @@ push_image:
   extends: [.dagger]
   tags: [dagger]
   stage: deploy
-  needs: [scan_image]
+  needs:
+    - job: build_image
+      optional: true
+    - job: scan_image
+      optional: true
   script:
     - cd $REPO
     - |
