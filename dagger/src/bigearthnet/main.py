@@ -3,7 +3,7 @@ import dagger
 from base64 import b64encode
 from typing import Annotated
 from datetime import datetime
-from dagger import Doc, dag, function, object_type
+from dagger import Doc, dag, function, object_type, File, Directory
 
 @object_type
 class Bigearthnet:
