@@ -36,7 +36,7 @@ def read_data_local(parent,name,bNeedToResize):
         ALL_BANDS = BANDS_10M + BANDS_20M
         for band_name in ALL_BANDS:
             band_path = f"{parent}/{name}/{name}_{band_name}.tif"
-            #logging.info('band_path '+band_path) 
+            #logging.info('band_path '+band_path)
             with rasterio.open(band_path,driver="GTiff",sharing=False) as band_file:
                 band_data   = band_file.read(1)  # open the tif image as a numpy array
                 # Resize depending on the resolution
