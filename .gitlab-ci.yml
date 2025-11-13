@@ -138,7 +138,7 @@ scan_image:
         /builds/$REPO_NAMESPACE/$REPO/sbom-report.html
         dagger call analyze-with-sonarqube \
           --yaml-rules $YAML_RULES \
-          --source-directory $CONTEXT \
+          --source-directory build \
           --sonar-host-url $SONAR_HOST_URL \
           --sonar-token $SONAR_TOKEN \
           --sonar-project-key $SONAR_PROJECT_KEY \
