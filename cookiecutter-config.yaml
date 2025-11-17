@@ -6,7 +6,7 @@ default_context:
   include_service: "yes"
   service_name: "democlassifier-ssl-feature-to-class"
   service_image_repo: "registry.apps.eo4eu.eu/eo4eu/eo4eu-inference-server/bigearthnet/eo4eu-wrapper-bigearthnet-democlassifier-ssl-feature-to-class"
-  service_image_tag: "7b7e3f7e0ebaada0cda38d3256ed4179c1b2fb28"
+  service_image_tag: "30c26cd19866ce7bd501bad5b51b3c84a3162ce5"
   service_image_pull_policy: "Always"
   service_image_secret: "bigearthnet-registry"
   service_container_port: "8080"
