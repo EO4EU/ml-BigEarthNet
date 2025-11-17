@@ -6,7 +6,7 @@ default_context:
   include_service: "yes"
   service_name: "compression-image-to-code"
   service_image_repo: "registry.apps.eo4eu.eu/eo4eu/eo4eu-inference-server/bigearthnet/eo4eu-wrapper-bigearthnet-compression-image-to-code"
-  service_image_tag: "30c1ccc018a9e98e89e3580604d635f472ba4d82"
+  service_image_tag: "5852446844a5f08d4492cbf3d77539ffdb09083e"
   service_image_pull_policy: "Always"
   service_image_secret: "bigearthnet-registry"
   service_container_port: "8080"
