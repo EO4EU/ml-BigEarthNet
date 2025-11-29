@@ -15,7 +15,7 @@ WORKDIR /app
 RUN pip install -r requirements.txt
 COPY --from=Include /app /app
 EXPOSE 8080
-EXPOSE 8080
 RUN chown -R eo4eu:eo4eu /app
+USER eo4eu
 ENTRYPOINT [ "flask" ]
 CMD [ "run","--port","8080","--host","0.0.0.0" ]
