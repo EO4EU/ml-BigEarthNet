@@ -34,19 +34,35 @@ class Bigearthnet:
     @function
     async def encode(
         self,
-        registry: Annotated[str, Doc("Registry address")],
-        username: Annotated[str, Doc("Registry username")],
-        password: Annotated[dagger.Secret, Doc("Registry password")],
+        registry: Annotated[str, Doc("Target registry address")],
+        username: Annotated[str, Doc("Target registry username")],
+        password: Annotated[dagger.Secret, Doc("Target registry password")],
+        dockerhub_username: Annotated[
+            str | None, Doc("Docker Hub username (optional)")
+        ] = None,
+        dockerhub_password: Annotated[
+            dagger.Secret | None, Doc("Docker Hub token (optional)")
+        ] = None,
     ) -> dagger.Secret:
-        """Encode username and password in base64."""
+        """Encode registry credentials into Docker config.json"""
+        auths = {}
+
         token = await password.plaintext()
-        auth_blob = b64encode(f"{username}:{token}".encode("utf-8")).decode("utf-8")
+        auths[registry] = {
+            "auth": b64encode(f"{username}:{token}".encode()).decode()
+        }
+
+        if dockerhub_username and dockerhub_password:
+            dh_token = await dockerhub_password.plaintext()
+            auths["https://index.docker.io/v1/"] = {
+                "auth": b64encode(
+                    f"{dockerhub_username}:{dh_token}".encode()
+                ).decode()
+            }
 
         return dagger.Client().set_secret(
-            "ci_blob",
-            json.dumps({"auths": {
-                registry: {"auth": auth_blob},
-            }})
+            "ci_docker_config",
+            json.dumps({"auths": auths})
         )
 
     @function
@@ -61,32 +77,42 @@ class Bigearthnet:
         tag: Annotated[str, Doc("Image tag")],
         username: Annotated[str, Doc("Registry username")],
         password: Annotated[dagger.Secret, Doc("Registry password")],
+        dockerhub_username: Annotated[str, Doc("Docker Hub username")],
+        dockerhub_password: Annotated[dagger.Secret, Doc("Docker Hub token")],
         wkd: Annotated[
             dagger.Directory,
             Doc("Location of directory containing Dagger files"),
         ],
     ) -> str:
         """Build and publish image from existing Dockerfile"""
-        auth_blob: dagger.Secret = await self.encode(registry, username, password)
+
+        auth_blob = await self.encode(
+            registry=registry,
+            username=username,
+            password=password,
+            dockerhub_username=dockerhub_username,
+            dockerhub_password=dockerhub_password,
+        )
+
         return await (
             dag.container()
             .from_("gcr.io/kaniko-project/executor:debug")
             .with_service_binding(
                 "registry.local",
                 self.registry(bucket, endpoint, access, secret)
-            )            
+            )
+            .with_mounted_secret(
+                "/kaniko/.docker/config.json",
+                auth_blob
+            )
             .with_mounted_directory("/kaniko/.docker", wkd)
-            .with_mounted_secret("/kaniko/.docker/config.json", auth_blob)
             .with_exec(
                 [
                     "/kaniko/executor",
-                    "--context", 
-                    "dir:///kaniko/.docker/",
-                    "--dockerfile",
-                    "/kaniko/.docker/Dockerfile",
+                    "--context", "dir:///kaniko/.docker/",
+                    "--dockerfile", "/kaniko/.docker/Dockerfile",
                     "--insecure",
-                    "--destination",
-                    f"registry.local/{repo}:{tag}"
+                    "--destination", f"registry.local/{repo}:{tag}",
                 ]
             )
             .stdout()
