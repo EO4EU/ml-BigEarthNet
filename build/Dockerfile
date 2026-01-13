@@ -21,9 +21,15 @@ COPY --from=Include /app /app
 
 RUN groupadd -g 1000 eo4eu && \
     useradd -u 1000 -g 1000 -m eo4eu && \
-    chown -R eo4eu:eo4eu /app && \
-    apt-get remove -y libsqlite3-0 && \
-    apt-get autoremove -y
+    chown -R eo4eu:eo4eu /app
+
+    
+FROM build AS libcopy
+
+RUN mkdir /tmp/lib && \
+    cp -r /usr/lib/x86_64-linux-gnu/* /tmp/lib/ && \
+    rm -f /tmp/lib/libsqlite3*
+
 
 FROM dhi.io/python:3.13
 
@@ -32,7 +38,7 @@ WORKDIR /app
 
 COPY --from=build /app /app
 COPY --from=build /usr/local /usr/local
-COPY --from=build /usr/lib/x86_64-linux-gnu /usr/lib/x86_64-linux-gnu
+COPY --from=libcopy /tmp/lib/ /usr/lib/x86_64-linux-gnu/
 COPY --from=build /usr/bin/ffmpeg /usr/bin/ffmpeg
 
 EXPOSE 8080
