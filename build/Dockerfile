@@ -1,5 +1,5 @@
 FROM registry.apps.eo4eu.eu/eo4eu/eo4eu-inference-server/bigearthnet/eo4eu-wrapper-bigearthnet-include:latest as Include
-FROM python:3.13-slim AS build
+FROM python:3.13-slim-trixie AS build
 
 ENV FLASK_APP=SSL-Image2Feature
 
@@ -21,8 +21,9 @@ COPY --from=Include /app /app
 
 RUN groupadd -g 1000 eo4eu && \
     useradd -u 1000 -g 1000 -m eo4eu && \
-    chown -R eo4eu:eo4eu /app
-
+    chown -R eo4eu:eo4eu /app && \
+    apt-get remove -y libsqlite3-0 && \
+    apt-get autoremove -y
 
 FROM dhi.io/python:3.13
 
