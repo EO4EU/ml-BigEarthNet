@@ -54,7 +54,7 @@ class Bigearthnet:
 
         if dockerhub_username and dockerhub_password:
             dh_token = await dockerhub_password.plaintext()
-            auths["https://index.docker.io/v1/"] = {
+            auths["dhi.io"] = {
                 "auth": b64encode(
                     f"{dockerhub_username}:{dh_token}".encode()
                 ).decode()
