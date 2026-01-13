@@ -1,5 +1,5 @@
 FROM registry.apps.eo4eu.eu/eo4eu/eo4eu-inference-server/bigearthnet/eo4eu-wrapper-bigearthnet-include:latest as Include
-FROM python:3.13.9-slim-trixie
+FROM dhi.io/python:3.13
 ENV FLASK_APP=SSL-Image2Feature
 RUN apt-get update && \
     apt-get install \
