@@ -87,6 +87,8 @@ build_image:
     - |
       if git diff --name-only HEAD~1 | grep -Eq '^('$CONTEXT'/)'; then
         dagger call build \
+        --dockerhub-username $DOCKERHUB_USERNAME \
+        --dockerhub-password env:DOCKERHUB_TOKEN \
         --registry $REGISTRY \
         --bucket $BUCKET \
         --endpoint https://$MINIO \
