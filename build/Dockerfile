@@ -24,7 +24,7 @@ RUN groupadd -g 1000 eo4eu && \
     chown -R eo4eu:eo4eu /app
 
 
-FROM dhi.io/python:3.13
+FROM registry.apps.eo4eu.eu/eo4eu/eo4eu-inference-server/bigearthnet/python:3.13
 
 ENV FLASK_APP=SSL-Image2Feature
 WORKDIR /app
