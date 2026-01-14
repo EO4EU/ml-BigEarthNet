@@ -35,7 +35,6 @@ COPY --from=build /usr/lib/x86_64-linux-gnu /usr/lib/x86_64-linux-gnu/
 COPY --from=build /usr/bin/ffmpeg /usr/bin/ffmpeg
 
 EXPOSE 8080
-
 USER 1000
 ENTRYPOINT ["flask"]
 CMD ["run", "--port", "8080", "--host", "0.0.0.0"]
