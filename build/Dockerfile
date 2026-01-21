@@ -15,7 +15,8 @@ WORKDIR /app
 COPY . /app
 
 RUN pip install --no-cache-dir -r requirements.txt
-RUN pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu
+RUN pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu && \
+    rm -rf /usr/local/lib/python3.13/site-packages/setuptools*
 
 COPY --from=Include /app /app
 
